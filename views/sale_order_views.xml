@@ -1,0 +1,278 @@
+<?xml version="1.0" encoding="utf-8"?>
+<odoo>
+    <!-- ====================================
+         EXTENSIÓN DE VISTA DE ORDEN DE VENTA
+         ==================================== -->
+    
+    <record id="sale_order_form_promotions" model="ir.ui.view">
+        <field name="name">sale.order.form.promotions</field>
+        <field name="model">sale.order</field>
+        <field name="inherit_id" ref="sale.view_order_form"/>
+        <field name="arch" type="xml">
+            <!-- Botón para aplicar promociones -->
+            <button name="action_confirm" position="before">
+                <button name="%(action_apply_promotions_wizard)d" 
+                        string="Apply Promotions" 
+                        type="action" 
+                        class="btn-secondary"
+                        attrs="{'invisible': [('state', 'not in', ['draft', 'sent'])]}"/>
+                
+                <button name="remove_promotions" 
+                        string="Remove Promotions" 
+                        type="object" 
+                        class="btn-secondary"
+                        attrs="{'invisible': [('state', 'not in', ['draft', 'sent'])]}"/>
+            </button>
+            
+            <!-- Campo de promociones aplicadas -->
+            <field name="partner_shipping_id" position="after">
+                <field name="applied_promotions" widget="many2many_tags" readonly="1"/>
+                <field name="total_promotion_discounts" readonly="1"/>
+            </field>
+            
+            <!-- Extensión de líneas de orden -->
+            <xpath expr="//field[@name='order_line']/tree/field[@name='price_subtotal']" position="after">
+                <field name="applied_promotion_id" optional="hide"/>
+                <field name="promotion_discount_amount" sum="Total Discounts" optional="hide"/>
+            </xpath>
+        </field>
+    </record>
+    
+    <!-- ====================================
+         EXTENSIÓN DE VISTA DE PRODUCTO
+         ==================================== -->
+    
+    <record id="product_template_form_promotions" model="ir.ui.view">
+        <field name="name">product.template.form.promotions</field>
+        <field name="model">product.template</field>
+        <field name="inherit_id" ref="product.product_template_only_form_view"/>
+        <field name="arch" type="xml">
+            <!-- Tab de promociones en productos -->
+            <xpath expr="//notebook" position="inside">
+                <page string="Promotions" name="promotions">
+                    <group>
+                        <field name="promotion_ids" readonly="1">
+                            <tree>
+                                <field name="code"/>
+                                <field name="name"/>
+                                <field name="discount_type"/>
+                                <field name="discount" attrs="{'invisible': [('discount_type', '!=', 'percentage')]}"/>
+                                <field name="fixed_discount" attrs="{'invisible': [('discount_type', '!=', 'fixed')]}"/>
+                                <field name="start_date"/>
+                                <field name="end_date"/>
+                                <field name="state"/>
+                            </tree>
+                        </field>
+                    </group>
+                </page>
+            </xpath>
+        </field>
+    </record>
+    
+    <!-- ====================================
+         WIZARD PARA APLICAR PROMOCIONES
+         ==================================== -->
+    
+    <record id="apply_promotions_wizard_form" model="ir.ui.view">
+        <field name="name">apply.promotions.wizard.form</field>
+        <field name="model">apply.promotions.wizard</field>
+        <field name="arch" type="xml">
+            <form string="Apply Promotions">
+                <header>
+                    <button name="action_apply_promotions" 
+                            string="Apply Promotions" 
+                            type="object" 
+                            class="oe_highlight"/>
+                    
+                    <button name="action_preview_update" 
+                            string="Update Preview" 
+                            type="object"/>
+                    
+                    <button string="Cancel" class="btn-secondary" special="cancel"/>
+                </header>
+                
+                <sheet>
+                    <div class="oe_title">
+                        <h1>Apply Promotions</h1>
+                        <h2>
+                            Order: <field name="sale_order_id" readonly="1"/>
+                        </h2>
+                    </div>
+                    
+                    <group>
+                        <group>
+                            <field name="apply_mode" widget="radio"/>
+                            <field name="currency_id" invisible="1"/>
+                        </group>
+                        <group>
+                            <field name="total_discounts" readonly="1"/>
+                        </group>
+                    </group>
+                    
+                    <notebook>
+                        <page string="Discount Preview" name="preview">
+                            <field name="preview_lines">
+                                <tree editable="bottom">
+                                    <field name="product_id" readonly="1"/>
+                                    <field name="promotion_id" readonly="1"/>
+                                    <field name="original_price" readonly="1"/>
+                                    <field name="quantity" readonly="1"/>
+                                    <field name="discount_percentage" readonly="1" widget="percentage"/>
+                                    <field name="discount_amount" readonly="1"/>
+                                    <field name="final_price" readonly="1"/>
+                                    <field name="apply"/>
+                                    <field name="currency_id" invisible="1"/>
+                                </tree>
+                            </field>
+                        </page>
+                        
+                        <page string="Available Promotions" name="available">
+                            <field name="promotion_ids" readonly="1">
+                                <tree>
+                                    <field name="code"/>
+                                    <field name="name"/>
+                                    <field name="discount_type"/>
+                                    <field name="discount" attrs="{'invisible': [('discount_type', '!=', 'percentage')]}"/>
+                                    <field name="fixed_discount" attrs="{'invisible': [('discount_type', '!=', 'fixed')]}"/>
+                                    <field name="is_valid"/>
+                                    <field name="days_remaining"/>
+                                </tree>
+                            </field>
+                        </page>
+                    </notebook>
+                </sheet>
+            </form>
+        </field>
+    </record>
+    
+    <!-- Acción del wizard -->
+    <record id="action_apply_promotions_wizard" model="ir.actions.act_window">
+        <field name="name">Apply Promotions</field>
+        <field name="res_model">apply.promotions.wizard</field>
+        <field name="view_mode">form</field>
+        <field name="target">new</field>
+        <field name="binding_model_id" ref="sale.model_sale_order"/>
+    </record>
+</odoo><xpath expr="//field[@name='order_line']/tree/field[@name='price_subtotal']" position="after">
+                <field name="promocion_aplicada_id" optional="hide"/>
+                <field name="discount_amount_promotion" sum="Total Descuentos" optional="hide"/>
+            </xpath>
+        </field>
+    </record>
+    
+    <!-- ====================================
+         EXTENSIÓN DE VISTA DE PRODUCTO
+         ==================================== -->
+    
+    <record id="product_template_form_promociones" model="ir.ui.view">
+        <field name="name">product.template.form.promociones</field>
+        <field name="model">product.template</field>
+        <field name="inherit_id" ref="product.product_template_only_form_view"/>
+        <field name="arch" type="xml">
+            <!-- Tab de promociones en productos -->
+            <xpath expr="//notebook" position="inside">
+                <page string="Promociones" name="promociones">
+                    <group>
+                        <field name="promocion_ids" readonly="1">
+                            <tree>
+                                <field name="codigo"/>
+                                <field name="nombre"/>
+                                <field name="tipo_descuento"/>
+                                <field name="descuento" attrs="{'invisible': [('tipo_descuento', '!=', 'porcentaje')]}"/>
+                                <field name="descuento_fijo" attrs="{'invisible': [('tipo_descuento', '!=', 'fijo')]}"/>
+                                <field name="fecha_inicio"/>
+                                <field name="fecha_fin"/>
+                                <field name="estado"/>
+                            </tree>
+                        </field>
+                    </group>
+                </page>
+            </xpath>
+        </field>
+    </record>
+    
+    <!-- ====================================
+         WIZARD PARA APLICAR PROMOCIONES
+         ==================================== -->
+    
+    <record id="apply_promotions_wizard_form" model="ir.ui.view">
+        <field name="name">apply.promotions.wizard.form</field>
+        <field name="model">apply.promotions.wizard</field>
+        <field name="arch" type="xml">
+            <form string="Aplicar Promociones">
+                <header>
+                    <button name="action_apply_promotions" 
+                            string="Aplicar Promociones" 
+                            type="object" 
+                            class="oe_highlight"/>
+                    
+                    <button name="action_preview_update" 
+                            string="Actualizar Vista Previa" 
+                            type="object"/>
+                    
+                    <button string="Cancelar" class="btn-secondary" special="cancel"/>
+                </header>
+                
+                <sheet>
+                    <div class="oe_title">
+                        <h1>Aplicar Promociones</h1>
+                        <h2>
+                            Orden: <field name="sale_order_id" readonly="1"/>
+                        </h2>
+                    </div>
+                    
+                    <group>
+                        <group>
+                            <field name="apply_mode" widget="radio"/>
+                            <field name="currency_id" invisible="1"/>
+                        </group>
+                        <group>
+                            <field name="total_descuentos" readonly="1"/>
+                        </group>
+                    </group>
+                    
+                    <notebook>
+                        <page string="Vista Previa de Descuentos" name="preview">
+                            <field name="preview_lines">
+                                <tree editable="bottom">
+                                    <field name="product_id" readonly="1"/>
+                                    <field name="promocion_id" readonly="1"/>
+                                    <field name="precio_original" readonly="1"/>
+                                    <field name="cantidad" readonly="1"/>
+                                    <field name="descuento_porcentaje" readonly="1" widget="percentage"/>
+                                    <field name="descuento_amount" readonly="1"/>
+                                    <field name="precio_final" readonly="1"/>
+                                    <field name="aplicar"/>
+                                    <field name="currency_id" invisible="1"/>
+                                </tree>
+                            </field>
+                        </page>
+                        
+                        <page string="Promociones Disponibles" name="available">
+                            <field name="promocion_ids" readonly="1">
+                                <tree>
+                                    <field name="codigo"/>
+                                    <field name="nombre"/>
+                                    <field name="tipo_descuento"/>
+                                    <field name="descuento" attrs="{'invisible': [('tipo_descuento', '!=', 'porcentaje')]}"/>
+                                    <field name="descuento_fijo" attrs="{'invisible': [('tipo_descuento', '!=', 'fijo')]}"/>
+                                    <field name="vigente"/>
+                                    <field name="dias_restantes"/>
+                                </tree>
+                            </field>
+                        </page>
+                    </notebook>
+                </sheet>
+            </form>
+        </field>
+    </record>
+    
+    <!-- Acción del wizard -->
+    <record id="action_apply_promotions_wizard" model="ir.actions.act_window">
+        <field name="name">Aplicar Promociones</field>
+        <field name="res_model">apply.promotions.wizard</field>
+        <field name="view_mode">form</field>
+        <field name="target">new</field>
+        <field name="binding_model_id" ref="sale.model_sale_order"/>
+    </record>
+</odoo>

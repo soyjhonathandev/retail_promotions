@@ -1,0 +1,42 @@
+<?xml version="1.0" encoding="utf-8"?>
+<odoo>
+    <!-- Promociones de demostración -->
+    <record id="promotion_demo_summer" model="retail.promotion">
+        <field name="name">Summer Discount 2024</field>
+        <field name="code">SUMMER2024</field>
+        <field name="description">Special summer promotion with 20% discount on selected products</field>
+        <field name="active" eval="True"/>
+        <field name="discount_type">percentage</field>
+        <field name="discount">20.0</field>
+        <field name="start_date" eval="(DateTime.now() - timedelta(days=10)).strftime('%Y-%m-%d')"/>
+        <field name="end_date" eval="(DateTime.now() + timedelta(days=20)).strftime('%Y-%m-%d')"/>
+        <field name="usage_limit">100</field>
+        <field name="minimum_amount">50.0</field>
+    </record>
+    
+    <record id="promotion_demo_fixed" model="retail.promotion">
+        <field name="name">Fixed Discount $10</field>
+        <field name="code">FIXED10</field>
+        <field name="description">Fixed discount of $10 on purchases over $100</field>
+        <field name="active" eval="True"/>
+        <field name="discount_type">fixed</field>
+        <field name="fixed_discount">10.0</field>
+        <field name="start_date" eval="DateTime.now().strftime('%Y-%m-%d')"/>
+        <field name="end_date" eval="(DateTime.now() + timedelta(days=30)).strftime('%Y-%m-%d')"/>
+        <field name="minimum_amount">100.0</field>
+        <field name="customer_limit">2</field>
+    </record>
+    
+    <record id="promotion_demo_expired" model="retail.promotion">
+        <field name="name">Christmas Promotion (Expired)</field>
+        <field name="code">CHRISTMAS2023</field>
+        <field name="description">Last year's Christmas promotion - example of expired promotion</field>
+        <field name="active" eval="False"/>
+        <field name="discount_type">percentage</field>
+        <field name="discount">15.0</field>
+        <field name="start_date" eval="(DateTime.now() - timedelta(days=120)).strftime('%Y-%m-%d')"/>
+        <field name="end_date" eval="(DateTime.now() - timedelta(days=90)).strftime('%Y-%m-%d')"/>
+        <field name="current_usage">25</field>
+        <field name="usage_limit">50</field>
+    </record>
+</odoo>

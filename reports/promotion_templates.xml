@@ -1,0 +1,609 @@
+<?xml version="1.0" encoding="utf-8"?>
+<odoo>
+    <!-- ====================================
+         TEMPLATES QWeb PARA EL FRONTEND
+         ==================================== -->
+    
+    <!-- Template principal del widget de promociones -->
+    <template id="PromotionWidget" name="Promotion Widget">
+        <div class="promotion-widget">
+            <div class="promotion-header">
+                <h4>
+                    <i class="fa fa-tags text-primary"/> Active Promotions
+                    <span t-if="state.loading" class="fa fa-spinner fa-spin ml-2"/>
+                </h4>
+            </div>
+            
+            <div t-if="!state.loading and state.promotions.length == 0" 
+                 class="alert alert-info">
+                <i class="fa fa-info-circle"/> No active promotions available
+            </div>
+            
+            <div t-if="!state.loading and state.promotions.length > 0" 
+                 class="promotion-list">
+                <div t-foreach="state.promotions" 
+                     t-as="promotion" 
+                     t-key="promotion.id"
+                     class="promotion-card mb-3">
+                    <div class="card">
+                        <div class="card-header d-flex justify-content-between align-items-center">
+                            <strong t-esc="promotion.name"/>
+                            <span class="badge"
+                                  t-attf-class="badge-#{promotion.days_remaining > 7 ? 'success' : promotion.days_remaining > 3 ? 'warning' : 'danger'}">
+                                <t t-esc="promotion.days_remaining"/> days left
+                            </span>
+                        </div>
+                        <div class="card-body">
+                            <div class="row">
+                                <div class="col-8">
+                                    <p class="card-text">
+                                        <strong>Code:</strong> <span t-esc="promotion.code"/>
+                                    </p>
+                                    <p class="promotion-discount">
+                                        <i class="fa fa-percent text-success"/>
+                                        <span t-if="promotion.discount_type === 'percentage'">
+                                            <t t-esc="promotion.discount"/>% OFF
+                                        </span>
+                                        <span t-else="">
+                                            $<t t-esc="promotion.fixed_discount"/> OFF
+                                        </span>
+                                    </p>
+                                </div>
+                                <div class="col-4 text-right">
+                                    <button class="btn btn-sm btn-primary"
+                                            t-on-click="() => this.applyPromotion(promotion.id)">
+                                        Apply
+                                    </button>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </template>
+    
+    <!-- Template para campo de promoción -->
+    <template id="PromotionField" name="Promotion Field">
+        <div class="promotion-field">
+            <div t-if="state.bestPromotion" class="promotion-info">
+                <div class="d-flex align-items-center">
+                    <i class="fa fa-tags text-success mr-2"/>
+                    <div>
+                        <strong t-esc="state.bestPromotion.name"/>
+                        <br/>
+                        <small class="text-muted">
+                            Save $<t t-esc="state.savings.toFixed(2)"/>
+                        </small>
+                    </div>
+                </div>
+            </div>
+            <div t-else="" class="text-muted">
+                <i class="fa fa-info-circle"/> No promotions available
+            </div>
+        </div>
+    </template>
+    
+    <!-- ====================================
+         TEMPLATES PARA REPORTES PDF
+         ==================================== -->
+    
+    <!-- Header personalizado para reportes -->
+    <template id="promotion_report_header" name="Promotion Report Header">
+        <div class="header">
+            <div class="row">
+                <div class="col-3">
+                    <img t-if="company.logo" 
+                         t-att-src="image_data_uri(company.logo)" 
+                         style="max-height: 45px;" 
+                         alt="Logo"/>
+                </div>
+                <div class="col-6 text-center">
+                    <h3 class="mt-0">Promotion Report</h3>
+                </div>
+                <div class="col-3 text-right">
+                    <div class="text-muted">
+                        <div>Date: <span t-esc="context_timestamp(datetime.datetime.now()).strftime('%d/%m/%Y')"/></div>
+                        <div>Time: <span t-esc="context_timestamp(datetime.datetime.now()).strftime('%H:%M')"/></div>
+                    </div>
+                </div>
+            </div>
+            <hr/>
+        </div>
+    </template>
+    
+    <!-- Footer personalizado para reportes -->
+    <template id="promotion_report_footer" name="Promotion Report Footer">
+        <div class="footer">
+            <hr/>
+            <div class="row">
+                <div class="col-6">
+                    <small class="text-muted">
+                        Generated by <span t-esc="user.name"/> | 
+                        <span t-esc="company.name"/>
+                    </small>
+                </div>
+                <div class="col-6 text-right">
+                    <small class="text-muted">
+                        Page <span class="page"/> of <span class="topage"/>
+                    </small>
+                </div>
+            </div>
+        </div>
+    </template>
+    
+    <!-- Template para mostrar estadísticas de promoción -->
+    <template id="promotion_statistics" name="Promotion Statistics">
+        <div class="promotion-stats">
+            <div class="row">
+                <div class="col-3 text-center">
+                    <div class="stat-box">
+                        <div class="stat-number text-success" t-esc="len(docs.filtered(lambda p: p.is_valid))"/>
+                        <div class="stat-label">Active</div>
+                    </div>
+                </div>
+                <div class="col-3 text-center">
+                    <div class="stat-box">
+                        <div class="stat-number text-warning" t-esc="len(docs.filtered(lambda p: p.state == 'draft'))"/>
+                        <div class="stat-label">Draft</div>
+                    </div>
+                </div>
+                <div class="col-3 text-center">
+                    <div class="stat-box">
+                        <div class="stat-number text-danger" t-esc="len(docs.filtered(lambda p: p.state == 'expired'))"/>
+                        <div class="stat-label">Expired</div>
+                    </div>
+                </div>
+                <div class="col-3 text-center">
+                    <div class="stat-box">
+                        <div class="stat-number text-info" t-esc="sum(docs.mapped('current_usage'))"/>
+                        <div class="stat-label">Total Uses</div>
+                    </div>
+                </div>
+            </div>
+        </div>
+        
+        <style>
+            .stat-box {
+                padding: 15px;
+                margin: 10px 0;
+                border: 1px solid #e9ecef;
+                border-radius: 5px;
+            }
+            .stat-number {
+                font-size: 24px;
+                font-weight: bold;
+            }
+            .stat-label {
+                font-size: 12px;
+                text-transform: uppercase;
+                color: #6c757d;
+            }
+        </style>
+    </template>
+    
+    <!-- Template para tabla de productos con promociones -->
+    <template id="promotion_products_table" name="Promotion Products Table">
+        <div class="promotion-products">
+            <table class="table table-striped table-sm">
+                <thead class="thead-dark">
+                    <tr>
+                        <th>Product Code</th>
+                        <th>Product Name</th>
+                        <th>Category</th>
+                        <th>List Price</th>
+                        <th>Discount</th>
+                        <th>Final Price</th>
+                        <th>Stock</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    <t t-foreach="promotion.product_ids" t-as="product">
+                        <tr>
+                            <td><span t-field="product.default_code"/></td>
+                            <td><span t-field="product.name"/></td>
+                            <td><span t-field="product.categ_id.name"/></td>
+                            <td class="text-right">
+                                <span t-field="product.list_price" 
+                                      t-options="{'widget': 'monetary', 'display_currency': promotion.currency_id}"/>
+                            </td>
+                            <td class="text-right text-success">
+                                <t t-if="promotion.discount_type == 'percentage'">
+                                    <span t-field="promotion.discount"/>%
+                                </t>
+                                <t t-else="">
+                                    <span t-field="promotion.fixed_discount"
+                                          t-options="{'widget': 'monetary', 'display_currency': promotion.currency_id}"/>
+                                </t>
+                            </td>
+                            <td class="text-right font-weight-bold">
+                                <t t-set="discount_amount" t-value="promotion.calculate_discount(product.list_price, 1)"/>
+                                <span t-esc="(product.list_price - discount_amount)" 
+                                      t-options="{'widget': 'float', 'precision': 2}"/>
+                            </td>
+                            <td class="text-right">
+                                <span t-field="product.qty_available"/>
+                            </td>
+                        </tr>
+                    </t>
+                </tbody>
+            </table>
+        </div>
+    </template>
+    
+    <!-- Template para gráfico de barras simple -->
+    <template id="promotion_chart" name="Promotion Usage Chart">
+        <div class="promotion-chart">
+            <h5>Promotion Usage Overview</h5>
+            <div class="chart-container">
+                <t t-foreach="docs" t-as="promotion">
+                    <div class="chart-bar mb-2">
+                        <div class="d-flex justify-content-between align-items-center mb-1">
+                            <small><strong t-esc="promotion.name"/></small>
+                            <small class="text-muted">
+                                <span t-esc="promotion.current_usage"/>
+                                <t t-if="promotion.usage_limit > 0">
+                                    / <span t-esc="promotion.usage_limit"/>
+                                </t>
+                            </small>
+                        </div>
+                        <div class="progress" style="height: 10px;">
+                            <t t-set="percentage" t-value="(promotion.current_usage / max(promotion.usage_limit, 1) * 100) if promotion.usage_limit > 0 else 0"/>
+                            <div class="progress-bar bg-primary" 
+                                 role="progressbar" 
+                                 t-attf-style="width: #{min(percentage, 100)}%"
+                                 t-attf-aria-valuenow="#{percentage}"
+                                 aria-valuemin="0" 
+                                 aria-valuemax="100">
+                            </div>
+                        </div>
+                    </div>
+                </t>
+            </div>
+        </div>
+        
+        <style>
+            .chart-container {
+                max-height: 300px;
+                overflow-y: auto;
+            }
+            .chart-bar {
+                margin-bottom: 15px;
+            }
+        </style>
+    </template>
+    
+    <!-- Template de resumen ejecutivo -->
+    <template id="promotion_executive_summary" name="Executive Summary">
+        <div class="executive-summary">
+            <div class="card">
+                <div class="card-header bg-primary text-white">
+                    <h5 class="mb-0">Executive Summary</h5>
+                </div>
+                <div class="card-body">
+                    <div class="row">
+                        <div class="col-md-6">
+                            <h6>Performance Metrics</h6>
+                            <ul class="list-unstyled">
+                                <li>
+                                    <strong>Total Active Promotions:</strong> 
+                                    <span t-esc="len(docs.filtered(lambda p: p.is_valid))"/>
+                                </li>
+                                <li>
+                                    <strong>Total Usage:</strong> 
+                                    <span t-esc="sum(docs.mapped('current_usage'))"/>
+                                </li>
+                                <li>
+                                    <strong>Expiring Soon (7 days):</strong> 
+                                    <span t-esc="len(docs.filtered(lambda p: p.days_remaining &lt;= 7 and p.days_remaining > 0))"/>
+                                </li>
+                                <li>
+                                    <strong>Average Discount:</strong> 
+                                    <t t-set="active_promotions" t-value="docs.filtered(lambda p: p.is_valid)"/>
+                                    <t t-if="active_promotions">
+                                        <span t-esc="round(sum(active_promotions.mapped('discount')) / len(active_promotions), 2)"/>%
+                                    </t>
+                                    <t t-else="">N/A</t>
+                                </li>
+                            </ul>
+                        </div>
+                        <div class="col-md-6">
+                            <h6>Recommendations</h6>
+                            <ul class="list-unstyled">
+                                <t t-set="expiring_soon" t-value="docs.filtered(lambda p: p.days_remaining &lt;= 7 and p.days_remaining > 0)"/>
+                                <li t-if="expiring_soon">
+                                    <i class="fa fa-warning text-warning"/> 
+                                    <span t-esc="len(expiring_soon)"/> promotion(s) expiring soon
+                                </li>
+                                
+                                <t t-set="unused_promotions" t-value="docs.filtered(lambda p: p.is_valid and p.current_usage == 0)"/>
+                                <li t-if="unused_promotions">
+                                    <i class="fa fa-info-circle text-info"/> 
+                                    <span t-esc="len(unused_promotions)"/> unused promotion(s)
+                                </li>
+                                
+                                <t t-set="high_usage" t-value="docs.filtered(lambda p: p.usage_limit > 0 and p.current_usage >= p.usage_limit * 0.8)"/>
+                                <li t-if="high_usage">
+                                    <i class="fa fa-check-circle text-success"/> 
+                                    <span t-esc="len(high_usage)"/> promotion(s) with high usage
+                                </li>
+                                
+                                <li t-if="not expiring_soon and not unused_promotions">
+                                    <i class="fa fa-thumbs-up text-success"/> 
+                                    All promotions are performing well
+                                </li>
+                            </ul>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </template>
+    
+    <!-- ====================================
+         TEMPLATE PARA EMAIL DE PROMOCIONES
+         ==================================== -->
+    
+    <template id="promotion_email_template" name="Promotion Email Template">
+        <div style="font-family: Arial, sans-serif; max-width: 600px; margin: 0 auto;">
+            <!-- Header -->
+            <div style="background-color: #007bff; color: white; padding: 20px; text-align: center;">
+                <h1 style="margin: 0;">🏷️ Special Promotion Alert!</h1>
+            </div>
+            
+            <!-- Content -->
+            <div style="padding: 20px; background-color: #f8f9fa;">
+                <t t-foreach="object.promotion_ids if hasattr(object, 'promotion_ids') else [object]" t-as="promotion">
+                    <div style="background-color: white; margin-bottom: 20px; padding: 20px; border-radius: 8px; border-left: 4px solid #28a745;">
+                        <h2 style="color: #333; margin-top: 0;">
+                            <span t-field="promotion.name"/>
+                        </h2>
+                        
+                        <div style="font-size: 24px; color: #28a745; font-weight: bold; margin: 10px 0;">
+                            <t t-if="promotion.discount_type == 'percentage'">
+                                <span t-field="promotion.discount"/>% OFF
+                            </t>
+                            <t t-else="">
+                                $<span t-field="promotion.fixed_discount"/> OFF
+                            </t>
+                        </div>
+                        
+                        <p style="color: #666; margin: 10px 0;">
+                            <strong>Promotion Code:</strong> <span t-field="promotion.code" style="background-color: #e9ecef; padding: 2px 6px; border-radius: 3px;"/>
+                        </p>
+                        
+                        <t t-if="promotion.description">
+                            <p style="color: #333; line-height: 1.5;">
+                                <span t-field="promotion.description"/>
+                            </p>
+                        </t>
+                        
+                        <div style="margin: 15px 0; padding: 10px; background-color: #fff3cd; border-radius: 4px;">
+                            <strong style="color: #856404;">⏰ Limited Time Offer!</strong><br/>
+                            Valid until: <span t-field="promotion.end_date" t-options="{'widget': 'date'}"/>
+                            (<span t-field="promotion.days_remaining"/> days remaining)
+                        </div>
+                        
+                        <t t-if="promotion.minimum_amount > 0">
+                            <p style="color: #666; font-size: 14px;">
+                                <em>Minimum purchase: <span t-field="promotion.minimum_amount" t-options="{'widget': 'monetary'}"/></em>
+                            </p>
+                        </t>
+                    </div>
+                </t>
+                
+                <!-- Call to Action -->
+                <div style="text-align: center; margin: 30px 0;">
+                    <a href="#" style="background-color: #007bff; color: white; padding: 15px 30px; text-decoration: none; border-radius: 5px; font-weight: bold; display: inline-block;">
+                        🛒 Shop Now
+                    </a>
+                </div>
+            </div>
+            
+            <!-- Footer -->
+            <div style="background-color: #343a40; color: white; padding: 15px; text-align: center; font-size: 12px;">
+                <p style="margin: 0;">
+                    This email was sent by <span t-esc="user.company_id.name"/><br/>
+                    <t t-if="user.company_id.website">
+                        Visit us at: <a t-att-href="user.company_id.website" style="color: #17a2b8;"><span t-esc="user.company_id.website"/></a>
+                    </t>
+                </p>
+            </div>
+        </div>
+    </template>
+    
+    <!-- ====================================
+         TEMPLATE PARA NOTIFICACIONES WEB
+         ==================================== -->
+    
+    <template id="promotion_notification" name="Promotion Notification">
+        <div class="promotion-notification alert alert-success alert-dismissible fade show" role="alert">
+            <div class="d-flex align-items-center">
+                <div class="mr-3">
+                    <i class="fa fa-tags fa-2x text-success"></i>
+                </div>
+                <div class="flex-grow-1">
+                    <h5 class="alert-heading mb-1">Promotion Applied Successfully!</h5>
+                    <p class="mb-1">
+                        <strong t-esc="promotion.name"/> 
+                        (<span t-if="promotion.discount_type == 'percentage'"
+                              t-esc="promotion.discount"/>%<span t-else="">$<span t-esc="promotion.fixed_discount"/></span> discount)
+                    </p>
+                    <small class="text-muted">
+                        You saved $<span t-esc="savings_amount"/> on this order!
+                    </small>
+                </div>
+            </div>
+            <button type="button" class="close" data-dismiss="alert" aria-label="Close">
+                <span aria-hidden="true">&times;</span>
+            </button>
+        </div>
+    </template>
+    
+    <!-- ====================================
+         TEMPLATE PARA DASHBOARD WIDGET
+         ==================================== -->
+    
+    <template id="promotion_dashboard_widget" name="Promotion Dashboard Widget">
+        <div class="promotion-dashboard-widget">
+            <div class="card h-100">
+                <div class="card-header bg-gradient-primary text-white">
+                    <div class="d-flex justify-content-between align-items-center">
+                        <h6 class="mb-0">
+                            <i class="fa fa-tags mr-2"/>Promotions Overview
+                        </h6>
+                        <small class="opacity-75">Last updated: now</small>
+                    </div>
+                </div>
+                
+                <div class="card-body p-3">
+                    <!-- Quick Stats -->
+                    <div class="row text-center mb-3">
+                        <div class="col-4">
+                            <div class="border-right">
+                                <div class="h4 mb-0 text-success" t-esc="active_count"/>
+                                <small class="text-muted">Active</small>
+                            </div>
+                        </div>
+                        <div class="col-4">
+                            <div class="border-right">
+                                <div class="h4 mb-0 text-warning" t-esc="expiring_count"/>
+                                <small class="text-muted">Expiring</small>
+                            </div>
+                        </div>
+                        <div class="col-4">
+                            <div class="h4 mb-0 text-info" t-esc="total_usage"/>
+                            <small class="text-muted">Total Uses</small>
+                        </div>
+                    </div>
+                    
+                    <!-- Recent Promotions -->
+                    <div class="recent-promotions">
+                        <h6 class="text-muted mb-2">Recent Activity</h6>
+                        <div class="list-group list-group-flush">
+                            <t t-foreach="recent_promotions[:3]" t-as="promotion">
+                                <div class="list-group-item px-0 py-2">
+                                    <div class="d-flex justify-content-between align-items-center">
+                                        <div>
+                                            <small class="font-weight-bold" t-esc="promotion.name"/>
+                                            <br/>
+                                            <span class="badge badge-sm"
+                                                  t-attf-class="badge-#{promotion.state == 'active' and 'success' or 'secondary'}">
+                                                <span t-esc="promotion.state"/>
+                                            </span>
+                                        </div>
+                                        <small class="text-muted">
+                                            <span t-esc="promotion.current_usage"/> uses
+                                        </small>
+                                    </div>
+                                </div>
+                            </t>
+                        </div>
+                    </div>
+                </div>
+                
+                <div class="card-footer text-center">
+                    <a href="/web#action=retail_promotions.action_promotions" 
+                       class="btn btn-sm btn-outline-primary">
+                        View All Promotions
+                    </a>
+                </div>
+            </div>
+        </div>
+    </template>
+    
+    <!-- ====================================
+         ESTILOS CSS PARA TEMPLATES
+         ==================================== -->
+    
+    <template id="promotion_templates_styles" name="Promotion Templates Styles">
+        <style type="text/css">
+            /* Estilos para widgets de promociones */
+            .promotion-widget {
+                border: 1px solid #dee2e6;
+                border-radius: 0.375rem;
+                padding: 1rem;
+                background-color: #f8f9fa;
+            }
+            
+            .promotion-card {
+                transition: transform 0.2s ease-in-out;
+            }
+            
+            .promotion-card:hover {
+                transform: translateY(-2px);
+                box-shadow: 0 4px 8px rgba(0,0,0,0.1);
+            }
+            
+            .promotion-discount {
+                font-size: 1.25rem;
+                font-weight: bold;
+                color: #28a745;
+            }
+            
+            .promotion-badge {
+                animation: pulse 2s infinite;
+            }
+            
+            @keyframes pulse {
+                0% { transform: scale(1); }
+                50% { transform: scale(1.05); }
+                100% { transform: scale(1); }
+            }
+            
+            /* Estilos para reportes */
+            .promotion-stats .stat-box {
+                text-align: center;
+                padding: 1rem;
+                border: 1px solid #dee2e6;
+                border-radius: 0.25rem;
+                margin-bottom: 1rem;
+            }
+            
+            .promotion-stats .stat-number {
+                font-size: 2rem;
+                font-weight: bold;
+                line-height: 1;
+            }
+            
+            .promotion-stats .stat-label {
+                font-size: 0.875rem;
+                text-transform: uppercase;
+                color: #6c757d;
+                margin-top: 0.5rem;
+            }
+            
+            /* Estilos para notificaciones */
+            .promotion-notification {
+                border-left: 4px solid #28a745;
+                background-color: #d4edda;
+                border-color: #c3e6cb;
+            }
+            
+            /* Estilos para dashboard */
+            .promotion-dashboard-widget .card {
+                box-shadow: 0 0.125rem 0.25rem rgba(0, 0, 0, 0.075);
+                border: 1px solid rgba(0, 0, 0, 0.125);
+            }
+            
+            .bg-gradient-primary {
+                background: linear-gradient(45deg, #007bff, #0056b3);
+            }
+            
+            /* Estilos responsive */
+            @media (max-width: 768px) {
+                .promotion-widget {
+                    padding: 0.5rem;
+                }
+                
+                .promotion-card {
+                    margin-bottom: 1rem;
+                }
+                
+                .promotion-stats .stat-box {
+                    margin-bottom: 0.5rem;
+                }
+            }
+        </style>
+    </template>
+</odoo>

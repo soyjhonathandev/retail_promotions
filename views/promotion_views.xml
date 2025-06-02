@@ -1,0 +1,734 @@
+<?xml version="1.0" encoding="utf-8"?>
+<odoo>
+    <!-- ====================================
+         VISTA DE LISTA/TREE
+         ==================================== -->
+    
+    <record id="promotion_tree_view" model="ir.ui.view">
+        <field name="name">retail.promotion.tree</field>
+        <field name="model">retail.promotion</field>
+        <field name="arch" type="xml">
+            <tree string="Promotions" 
+                  decoration-success="state == 'active'"
+                  decoration-warning="state == 'draft'"
+                  decoration-danger="state == 'expired'"
+                  decoration-muted="state == 'cancelled'">
+                
+                <field name="code"/>
+                <field name="name"/>
+                <field name="discount_type"/>
+                <field name="discount" attrs="{'invisible': [('discount_type', '!=', 'percentage')]}"/>
+                <field name="fixed_discount" attrs="{'invisible': [('discount_type', '!=', 'fixed')]}"/>
+                <field name="start_date"/>
+                <field name="end_date"/>
+                <field name="days_remaining"/>
+                <field name="state"/>
+                <field name="is_valid"/>
+                <field name="current_usage"/>
+                <field name="usage_limit"/>
+                <field name="active" invisible="1"/>
+                
+                <!-- Botones de acción rápida -->
+                <button name="action_activate" 
+                        type="object" 
+                        icon="fa-play" 
+                        title="Activate Promotion"
+                        attrs="{'invisible': [('active', '=', True)]}"/>
+                
+                <button name="action_deactivate" 
+                        type="object" 
+                        icon="fa-pause" 
+                        title="Deactivate Promotion"
+                        attrs="{'invisible': [('active', '=', False)]}"/>
+            </tree>
+        </field>
+    </record>
+
+    <!-- ====================================
+         VISTA DE FORMULARIO
+         ==================================== -->
+    
+    <record id="promotion_form_view" model="ir.ui.view">
+        <field name="name">retail.promotion.form</field>
+        <field name="model">retail.promotion</field>
+        <field name="arch" type="xml">
+            <form string="Promotion">
+                <!-- Header con botones y statusbar -->
+                <header>
+                    <button name="action_activate" 
+                            string="Activate" 
+                            type="object" 
+                            class="oe_highlight"
+                            attrs="{'invisible': [('active', '=', True)]}"/>
+                    
+                    <button name="action_deactivate" 
+                            string="Deactivate" 
+                            type="object"
+                            attrs="{'invisible': [('active', '=', False)]}"/>
+                    
+                    <button name="action_duplicate" 
+                            string="Duplicate" 
+                            type="object"/>
+                    
+                    <field name="state" widget="statusbar" statusbar_visible="draft,active,expired"/>
+                </header>
+                
+                <sheet>
+                    <!-- Botones estadísticos -->
+                    <div class="oe_button_box" name="button_box">
+                        <button name="%(action_sale_order_promotions)d" 
+                                type="action" 
+                                class="oe_stat_button" 
+                                icon="fa-shopping-cart"
+                                context="{'search_default_promotion_id': active_id}">
+                            <field name="current_usage" widget="statinfo" string="Usage"/>
+                        </button>
+                        
+                        <button class="oe_stat_button" icon="fa-calendar">
+                            <field name="days_remaining" widget="statinfo" string="Days Remaining"/>
+                        </button>
+                    </div>
+                    
+                    <!-- Título principal -->
+                    <div class="oe_title">
+                        <label for="name" class="oe_edit_only"/>
+                        <h1>
+                            <field name="name" placeholder="Promotion name"/>
+                        </h1>
+                        <h2>
+                            <field name="code" placeholder="PROMO-001"/>
+                        </h2>
+                    </div>
+                    
+                    <!-- Alertas y badges -->
+                    <div class="alert alert-success" 
+                         attrs="{'invisible': [('is_valid', '=', False)]}" 
+                         role="alert">
+                        <strong>Valid Promotion!</strong> This promotion is active and can be applied.
+                    </div>
+                    
+                    <div class="alert alert-warning" 
+                         attrs="{'invisible': ['|', ('state', '!=', 'draft'), ('active', '=', False)]}" 
+                         role="alert">
+                        <strong>Draft Promotion</strong> Activate the promotion so it can be applied.
+                    </div>
+                    
+                    <div class="alert alert-danger" 
+                         attrs="{'invisible': [('state', '!=', 'expired')]}" 
+                         role="alert">
+                        <strong>Expired Promotion</strong> This promotion can no longer be applied.
+                    </div>
+                    
+                    <!-- Campos principales -->
+                    <group>
+                        <group string="General Information">
+                            <field name="active"/>
+                            <field name="is_valid" readonly="1"/>
+                            <field name="description"/>
+                            <field name="currency_id" invisible="1"/>
+                        </group>
+                        
+                        <group string="Validity">
+                            <field name="start_date"/>
+                            <field name="end_date"/>
+                            <field name="days_remaining" readonly="1"/>
+                        </group>
+                    </group>
+                    
+                    <!-- Configuración de descuento -->
+                    <group string="Discount Configuration">
+                        <group>
+                            <field name="discount_type" widget="radio" options="{'horizontal': true}"/>
+                            <field name="discount" 
+                                   attrs="{'invisible': [('discount_type', '!=', 'percentage')], 'required': [('discount_type', '=', 'percentage')]}"
+                                   widget="percentage"/>
+                            <field name="fixed_discount" 
+                                   attrs="{'invisible': [('discount_type', '!=', 'fixed')], 'required': [('discount_type', '=', 'fixed')]}"/>
+                        </group>
+                        
+                        <group>
+                            <field name="minimum_amount"/>
+                            <field name="usage_limit"/>
+                            <field name="customer_limit"/>
+                        </group>
+                    </group>
+                    
+                    <!-- Notebook con tabs -->
+                    <notebook>
+                        <!-- Tab de Productos -->
+                        <page string="Products" name="products">
+                            <field name="product_ids">
+                                <tree editable="bottom">
+                                    <field name="default_code"/>
+                                    <field name="name"/>
+                                    <field name="categ_id"/>
+                                    <field name="list_price"/>
+                                    <field name="qty_available"/>
+                                </tree>
+                            </field>
+                        </page>
+                        
+                        <!-- Tab de Categorías -->
+                        <page string="Categories" name="categories">
+                            <field name="category_ids">
+                                <tree>
+                                    <field name="complete_name"/>
+                                    <field name="product_count"/>
+                                </tree>
+                            </field>
+                        </page>
+                        
+                        <!-- Tab de Estadísticas -->
+                        <page string="Statistics" name="statistics">
+                            <group>
+                                <group string="Promotion Usage">
+                                    <field name="current_usage" readonly="1"/>
+                                    <field name="usage_limit" readonly="1"/>
+                                </group>
+                                
+                                <group string="State">
+                                    <field name="state" readonly="1"/>
+                                    <field name="is_valid" readonly="1"/>
+                                </group>
+                            </group>
+                        </page>
+                    </notebook>
+                </sheet>
+                
+                <!-- Chatter para seguimiento -->
+                <div class="oe_chatter">
+                    <field name="message_follower_ids"/>
+                    <field name="activity_ids"/>
+                    <field name="message_ids"/>
+                </div>
+            </form>
+        </field>
+    </record>
+
+    <!-- ====================================
+         VISTA KANBAN
+         ==================================== -->
+    
+    <record id="promotion_kanban_view" model="ir.ui.view">
+        <field name="name">retail.promotion.kanban</field>
+        <field name="model">retail.promotion</field>
+        <field name="arch" type="xml">
+            <kanban default_group_by="state" class="o_kanban_small_column">
+                <field name="name"/>
+                <field name="code"/>
+                <field name="discount"/>
+                <field name="fixed_discount"/>
+                <field name="discount_type"/>
+                <field name="start_date"/>
+                <field name="end_date"/>
+                <field name="days_remaining"/>
+                <field name="state"/>
+                <field name="is_valid"/>
+                <field name="active"/>
+                <field name="current_usage"/>
+                <field name="usage_limit"/>
+                
+                <templates>
+                    <t t-name="kanban-box">
+                        <div class="oe_kanban_card oe_kanban_global_click">
+                            <div class="oe_kanban_content">
+                                <!-- Header de la tarjeta -->
+                                <div class="o_kanban_record_top">
+                                    <div class="o_kanban_record_headings">
+                                        <strong class="o_kanban_record_title">
+                                            <field name="name"/>
+                                        </strong>
+                                        <div class="o_kanban_record_subtitle">
+                                            <i class="fa fa-barcode"/> <field name="code"/>
+                                        </div>
+                                    </div>
+                                    
+                                    <!-- Badge de estado -->
+                                    <span class="badge badge-pill float-right"
+                                          t-attf-class="#{record.is_valid.raw_value ? 'badge-success' : 'badge-secondary'}">
+                                        <t t-if="record.is_valid.raw_value">Valid</t>
+                                        <t t-else="">Inactive</t>
+                                    </span>
+                                </div>
+                                
+                                <!-- Contenido principal -->
+                                <div class="o_kanban_record_body">
+                                    <div class="row">
+                                        <div class="col-8">
+                                            <!-- Descuento -->
+                                            <div class="mb-2">
+                                                <i class="fa fa-percent text-primary"/>
+                                                <span class="ml-1">
+                                                    <t t-if="record.discount_type.raw_value == 'percentage'">
+                                                        <field name="discount"/>%
+                                                    </t>
+                                                    <t t-else="">
+                                                        $<field name="fixed_discount"/>
+                                                    </t>
+                                                </span>
+                                            </div>
+                                            
+                                            <!-- Fechas -->
+                                            <div class="small text-muted">
+                                                <i class="fa fa-calendar"/>
+                                                <field name="start_date"/> - <field name="end_date"/>
+                                            </div>
+                                        </div>
+                                        
+                                        <div class="col-4 text-right">
+                                            <!-- Días restantes -->
+                                            <div class="mb-1">
+                                                <span class="badge badge-info">
+                                                    <field name="days_remaining"/> days
+                                                </span>
+                                            </div>
+                                            
+                                            <!-- Usos -->
+                                            <div class="small">
+                                                <t t-if="record.usage_limit.raw_value > 0">
+                                                    <field name="current_usage"/>/<field name="usage_limit"/>
+                                                </t>
+                                                <t t-else="">
+                                                    <field name="current_usage"/> uses
+                                                </t><?xml version="1.0" encoding="utf-8"?>
+<odoo>
+    <!-- ====================================
+         VISTA DE LISTA/TREE
+         ==================================== -->
+    
+    <record id="promocion_tree_view" model="ir.ui.view">
+        <field name="name">retail.promocion.tree</field>
+        <field name="model">retail.promocion</field>
+        <field name="arch" type="xml">
+            <tree string="Promociones" 
+                  decoration-success="estado == 'activo'"
+                  decoration-warning="estado == 'borrador'"
+                  decoration-danger="estado == 'vencido'"
+                  decoration-muted="estado == 'cancelado'">
+                
+                <field name="codigo"/>
+                <field name="nombre"/>
+                <field name="tipo_descuento"/>
+                <field name="descuento" attrs="{'invisible': [('tipo_descuento', '!=', 'porcentaje')]}"/>
+                <field name="descuento_fijo" attrs="{'invisible': [('tipo_descuento', '!=', 'fijo')]}"/>
+                <field name="fecha_inicio"/>
+                <field name="fecha_fin"/>
+                <field name="dias_restantes"/>
+                <field name="estado"/>
+                <field name="vigente"/>
+                <field name="usos_actuales"/>
+                <field name="limite_uso"/>
+                <field name="activo" invisible="1"/>
+                
+                <!-- Botones de acción rápida -->
+                <button name="action_activar" 
+                        type="object" 
+                        icon="fa-play" 
+                        title="Activar Promoción"
+                        attrs="{'invisible': [('activo', '=', True)]}"/>
+                
+                <button name="action_desactivar" 
+                        type="object" 
+                        icon="fa-pause" 
+                        title="Desactivar Promoción"
+                        attrs="{'invisible': [('activo', '=', False)]}"/>
+            </tree>
+        </field>
+    </record>
+
+    <!-- ====================================
+         VISTA DE FORMULARIO
+         ==================================== -->
+    
+    <record id="promocion_form_view" model="ir.ui.view">
+        <field name="name">retail.promocion.form</field>
+        <field name="model">retail.promocion</field>
+        <field name="arch" type="xml">
+            <form string="Promoción">
+                <!-- Header con botones y statusbar -->
+                <header>
+                    <button name="action_activar" 
+                            string="Activar" 
+                            type="object" 
+                            class="oe_highlight"
+                            attrs="{'invisible': [('activo', '=', True)]}"/>
+                    
+                    <button name="action_desactivar" 
+                            string="Desactivar" 
+                            type="object"
+                            attrs="{'invisible': [('activo', '=', False)]}"/>
+                    
+                    <button name="action_duplicar" 
+                            string="Duplicar" 
+                            type="object"/>
+                    
+                    <field name="estado" widget="statusbar" statusbar_visible="borrador,activo,vencido"/>
+                </header>
+                
+                <sheet>
+                    <!-- Botones estadísticos -->
+                    <div class="oe_button_box" name="button_box">
+                        <button name="%(action_sale_order_promociones)d" 
+                                type="action" 
+                                class="oe_stat_button" 
+                                icon="fa-shopping-cart"
+                                context="{'search_default_promocion_id': active_id}">
+                            <field name="usos_actuales" widget="statinfo" string="Usos"/>
+                        </button>
+                        
+                        <button class="oe_stat_button" icon="fa-calendar">
+                            <field name="dias_restantes" widget="statinfo" string="Días Restantes"/>
+                        </button>
+                    </div>
+                    
+                    <!-- Título principal -->
+                    <div class="oe_title">
+                        <label for="nombre" class="oe_edit_only"/>
+                        <h1>
+                            <field name="nombre" placeholder="Nombre de la promoción"/>
+                        </h1>
+                        <h2>
+                            <field name="codigo" placeholder="PROMO-001"/>
+                        </h2>
+                    </div>
+                    
+                    <!-- Alertas y badges -->
+                    <div class="alert alert-success" 
+                         attrs="{'invisible': [('vigente', '=', False)]}" 
+                         role="alert">
+                        <strong>¡Promoción Vigente!</strong> Esta promoción está activa y puede ser aplicada.
+                    </div>
+                    
+                    <div class="alert alert-warning" 
+                         attrs="{'invisible': ['|', ('estado', '!=', 'borrador'), ('activo', '=', False)]}" 
+                         role="alert">
+                        <strong>Promoción en Borrador</strong> Activa la promoción para que pueda ser aplicada.
+                    </div>
+                    
+                    <div class="alert alert-danger" 
+                         attrs="{'invisible': [('estado', '!=', 'vencido')]}" 
+                         role="alert">
+                        <strong>Promoción Vencida</strong> Esta promoción ya no puede ser aplicada.
+                    </div>
+                    
+                    <!-- Campos principales -->
+                    <group>
+                        <group string="Información General">
+                            <field name="activo"/>
+                            <field name="vigente" readonly="1"/>
+                            <field name="descripcion"/>
+                            <field name="currency_id" invisible="1"/>
+                        </group>
+                        
+                        <group string="Vigencia">
+                            <field name="fecha_inicio"/>
+                            <field name="fecha_fin"/>
+                            <field name="dias_restantes" readonly="1"/>
+                        </group>
+                    </group>
+                    
+                    <!-- Configuración de descuento -->
+                    <group string="Configuración de Descuento">
+                        <group>
+                            <field name="tipo_descuento" widget="radio" options="{'horizontal': true}"/>
+                            <field name="descuento" 
+                                   attrs="{'invisible': [('tipo_descuento', '!=', 'porcentaje')], 'required': [('tipo_descuento', '=', 'porcentaje')]}"
+                                   widget="percentage"/>
+                            <field name="descuento_fijo" 
+                                   attrs="{'invisible': [('tipo_descuento', '!=', 'fijo')], 'required': [('tipo_descuento', '=', 'fijo')]}"/>
+                        </group>
+                        
+                        <group>
+                            <field name="monto_minimo"/>
+                            <field name="limite_uso"/>
+                            <field name="limite_por_cliente"/>
+                        </group>
+                    </group>
+                    
+                    <!-- Notebook con tabs -->
+                    <notebook>
+                        <!-- Tab de Productos -->
+                        <page string="Productos" name="productos">
+                            <field name="product_ids">
+                                <tree editable="bottom">
+                                    <field name="default_code"/>
+                                    <field name="name"/>
+                                    <field name="categ_id"/>
+                                    <field name="list_price"/>
+                                    <field name="qty_available"/>
+                                </tree>
+                            </field>
+                        </page>
+                        
+                        <!-- Tab de Categorías -->
+                        <page string="Categorías" name="categorias">
+                            <field name="category_ids">
+                                <tree>
+                                    <field name="complete_name"/>
+                                    <field name="product_count"/>
+                                </tree>
+                            </field>
+                        </page>
+                        
+                        <!-- Tab de Estadísticas -->
+                        <page string="Estadísticas" name="estadisticas">
+                            <group>
+                                <group string="Uso de la Promoción">
+                                    <field name="usos_actuales" readonly="1"/>
+                                    <field name="limite_uso" readonly="1"/>
+                                </group>
+                                
+                                <group string="Estado">
+                                    <field name="estado" readonly="1"/>
+                                    <field name="vigente" readonly="1"/>
+                                </group>
+                            </group>
+                        </page>
+                    </notebook>
+                </sheet>
+                
+                <!-- Chatter para seguimiento -->
+                <div class="oe_chatter">
+                    <field name="message_follower_ids"/>
+                    <field name="activity_ids"/>
+                    <field name="message_ids"/>
+                </div>
+            </form>
+        </field>
+    </record>
+
+    <!-- ====================================
+         VISTA KANBAN
+         ==================================== -->
+    
+    <record id="promocion_kanban_view" model="ir.ui.view">
+        <field name="name">retail.promocion.kanban</field>
+        <field name="model">retail.promocion</field>
+        <field name="arch" type="xml">
+            <kanban default_group_by="estado" class="o_kanban_small_column">
+                <field name="nombre"/>
+                <field name="codigo"/>
+                <field name="descuento"/>
+                <field name="descuento_fijo"/>
+                <field name="tipo_descuento"/>
+                <field name="fecha_inicio"/>
+                <field name="fecha_fin"/>
+                <field name="dias_restantes"/>
+                <field name="estado"/>
+                <field name="vigente"/>
+                <field name="activo"/>
+                <field name="usos_actuales"/>
+                <field name="limite_uso"/>
+                
+                <templates>
+                    <t t-name="kanban-box">
+                        <div class="oe_kanban_card oe_kanban_global_click">
+                            <div class="oe_kanban_content">
+                                <!-- Header de la tarjeta -->
+                                <div class="o_kanban_record_top">
+                                    <div class="o_kanban_record_headings">
+                                        <strong class="o_kanban_record_title">
+                                            <field name="nombre"/>
+                                        </strong>
+                                        <div class="o_kanban_record_subtitle">
+                                            <i class="fa fa-barcode"/> <field name="codigo"/>
+                                        </div>
+                                    </div>
+                                    
+                                    <!-- Badge de estado -->
+                                    <span class="badge badge-pill float-right"
+                                          t-attf-class="#{record.vigente.raw_value ? 'badge-success' : 'badge-secondary'}">
+                                        <t t-if="record.vigente.raw_value">Vigente</t>
+                                        <t t-else="">Inactiva</t>
+                                    </span>
+                                </div>
+                                
+                                <!-- Contenido principal -->
+                                <div class="o_kanban_record_body">
+                                    <div class="row">
+                                        <div class="col-8">
+                                            <!-- Descuento -->
+                                            <div class="mb-2">
+                                                <i class="fa fa-percent text-primary"/>
+                                                <span class="ml-1">
+                                                    <t t-if="record.tipo_descuento.raw_value == 'porcentaje'">
+                                                        <field name="descuento"/>%
+                                                    </t>
+                                                    <t t-else="">
+                                                        $<field name="descuento_fijo"/>
+                                                    </t>
+                                                </span>
+                                            </div>
+                                            
+                                            <!-- Fechas -->
+                                            <div class="small text-muted">
+                                                <i class="fa fa-calendar"/>
+                                                <field name="fecha_inicio"/> - <field name="fecha_fin"/>
+                                            </div>
+                                        </div>
+                                        
+                                        <div class="col-4 text-right">
+                                            <!-- Días restantes -->
+                                            <div class="mb-1">
+                                                <span class="badge badge-info">
+                                                    <field name="dias_restantes"/> días
+                                                </span>
+                                            </div>
+                                            
+                                            <!-- Usos -->
+                                            <div class="small">
+                                                <t t-if="record.limite_uso.raw_value > 0">
+                                                    <field name="usos_actuales"/>/<field name="limite_uso"/>
+                                                </t>
+                                                <t t-else="">
+                                                    <field name="usos_actuales"/> usos
+                                                </t>
+                                            </div>
+                                        </div>
+                                    </div>
+                                </div>
+                                
+                                <!-- Footer con botones -->
+                                <div class="o_kanban_record_bottom">
+                                    <div class="oe_kanban_bottom_left">
+                                        <!-- Productos asociados -->
+                                        <small class="text-muted">
+                                            <t t-if="record.product_ids.raw_value.length > 0">
+                                                <i class="fa fa-cube"/> 
+                                                <t t-esc="record.product_ids.raw_value.length"/> products
+                                            </t>
+                                        </small>
+                                    </div>
+                                    
+                                    <div class="oe_kanban_bottom_right">
+                                        <!-- Botones de acción -->
+                                        <button name="action_activate" 
+                                                type="object" 
+                                                class="btn btn-sm btn-success"
+                                                t-if="!record.active.raw_value">
+                                            <i class="fa fa-play"/> Activate
+                                        </button>
+                                        
+                                        <button name="action_deactivate" 
+                                                type="object" 
+                                                class="btn btn-sm btn-warning"
+                                                t-if="record.active.raw_value">
+                                            <i class="fa fa-pause"/> Pause
+                                        </button>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </t>
+                </templates>
+            </kanban>
+        </field>
+    </record>
+
+    <!-- ====================================
+         VISTA DE BÚSQUEDA
+         ==================================== -->
+    
+    <record id="promotion_search_view" model="ir.ui.view">
+        <field name="name">retail.promotion.search</field>
+        <field name="model">retail.promotion</field>
+        <field name="arch" type="xml">
+            <search string="Search Promotions">
+                <!-- Campos de búsqueda -->
+                <field name="name" string="Name/Code" 
+                       filter_domain="['|', ('name', 'ilike', self), ('code', 'ilike', self)]"/>
+                <field name="code"/>
+                <field name="product_ids"/>
+                <field name="category_ids"/>
+                
+                <!-- Filtros predefinidos -->
+                <filter name="valid" string="Valid" 
+                        domain="[('is_valid', '=', True)]"/>
+                <filter name="active" string="Active" 
+                        domain="[('active', '=', True)]"/>
+                <filter name="expired" string="Expired" 
+                        domain="[('state', '=', 'expired')]"/>
+                <filter name="expiring_soon" string="Expiring Soon (7 days)" 
+                        domain="[('days_remaining', '&lt;=', 7), ('days_remaining', '>=', 0)]"/>
+                
+                <separator/>
+                
+                <!-- Filtros por tipo -->
+                <filter name="percentage" string="Percentage Discount" 
+                        domain="[('discount_type', '=', 'percentage')]"/>
+                <filter name="fixed" string="Fixed Discount" 
+                        domain="[('discount_type', '=', 'fixed')]"/>
+                
+                <separator/>
+                
+                <!-- Filtros por fecha -->
+                <filter name="this_month" string="This Month"
+                        domain="[('start_date', '>=', datetime.datetime.now().strftime('%Y-%m-01'))]"/>
+                <filter name="next_30_days" string="Next 30 Days"
+                        domain="[('end_date', '>=', datetime.datetime.now().strftime('%Y-%m-%d')),
+                                ('end_date', '&lt;=', (datetime.datetime.now() + datetime.timedelta(days=30)).strftime('%Y-%m-%d'))]"/>
+                
+                <!-- Agrupaciones -->
+                <group expand="0" string="Group By">
+                    <filter name="group_state" string="State" 
+                            context="{'group_by': 'state'}"/>
+                    <filter name="group_type" string="Discount Type" 
+                            context="{'group_by': 'discount_type'}"/>
+                    <filter name="group_start_date" string="Start Date" 
+                            context="{'group_by': 'start_date:month'}"/>
+                    <filter name="group_valid" string="Validity" 
+                            context="{'group_by': 'is_valid'}"/>
+                </group>
+            </search>
+        </field>
+    </record>
+
+    <!-- ====================================
+         ACCIONES
+         ==================================== -->
+    
+    <!-- Acción principal de promociones -->
+    <record id="action_promotions" model="ir.actions.act_window">
+        <field name="name">Promotions</field>
+        <field name="res_model">retail.promotion</field>
+        <field name="view_mode">kanban,tree,form</field>
+        <field name="context">{}</field>
+        <field name="domain">[]</field>
+        <field name="help" type="html">
+            <p class="o_view_nocontent_smiling_face">
+                Create your first promotion!
+            </p>
+            <p>
+                Promotions allow you to apply automatic discounts 
+                to specific products or categories during a specified period.
+            </p>
+            <p>
+                <strong>Features:</strong>
+            </p>
+            <ul>
+                <li>Percentage or fixed amount discounts</li>
+                <li>Automatic validity control</li>
+                <li>Automatic application in sales</li>
+                <li>Configurable usage limits</li>
+            </ul>
+        </field>
+    </record>
+    
+    <!-- Acción para promociones vigentes -->
+    <record id="action_valid_promotions" model="ir.actions.act_window">
+        <field name="name">Valid Promotions</field>
+        <field name="res_model">retail.promotion</field>
+        <field name="view_mode">kanban,tree,form</field>
+        <field name="context">{'search_default_valid': 1}</field>
+        <field name="domain">[('is_valid', '=', True)]</field>
+    </record>
+    
+    <!-- Acción para promociones por vencer -->
+    <record id="action_expiring_promotions" model="ir.actions.act_window">
+        <field name="name">Expiring Promotions</field>
+        <field name="res_model">retail.promotion</field>
+        <field name="view_mode">tree,form</field>
+        <field name="context">{'search_default_expiring_soon': 1}</field>
+        <field name="domain">[('days_remaining', '&lt;=', 7), ('days_remaining', '>=', 0)]</field>
+    </record>
+</odoo>

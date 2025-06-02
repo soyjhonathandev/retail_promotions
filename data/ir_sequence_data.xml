@@ -1,0 +1,13 @@
+<?xml version="1.0" encoding="utf-8"?>
+<odoo>
+    <!-- Secuencia para códigos de promociones -->
+    <record id="seq_promotion_code" model="ir.sequence">
+        <field name="name">Promotion Code</field>
+        <field name="code">retail.promotion</field>
+        <field name="prefix">PROMO-</field>
+        <field name="padding">4</field>
+        <field name="number_next">1</field>
+        <field name="number_increment">1</field>
+        <field name="company_id" eval="False"/>
+    </record>
+</odoo>

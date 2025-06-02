@@ -1,0 +1,52 @@
+<?xml version="1.0" encoding="utf-8"?>
+<odoo>
+    <!-- ====================================
+         MENÚS PRINCIPALES
+         ==================================== -->
+    
+    <!-- Menú principal de promociones (bajo Ventas) -->
+    <menuitem id="menu_promotions" 
+              name="Promotions" 
+              parent="sale.sale_menu_root"
+              sequence="30"
+              groups="retail_promotions.group_promotion_user"/>
+    
+    <!-- Submenú: Todas las promociones -->
+    <menuitem id="menu_all_promotions" 
+              name="All Promotions" 
+              parent="menu_promotions"
+              action="action_promotions" 
+              sequence="10"/>
+    
+    <!-- Submenú: Promociones vigentes -->
+    <menuitem id="menu_valid_promotions" 
+              name="Valid Promotions" 
+              parent="menu_promotions"
+              action="action_valid_promotions" 
+              sequence="20"/>
+    
+    <!-- Submenú: Promociones por vencer -->
+    <menuitem id="menu_expiring_promotions" 
+              name="Expiring Soon" 
+              parent="menu_promotions"
+              action="action_expiring_promotions" 
+              sequence="30"/>
+    
+    <!-- ====================================
+         MENÚS DE CONFIGURACIÓN
+         ==================================== -->
+    
+    <!-- Menú de configuración (solo para managers) -->
+    <menuitem id="menu_promotions_config" 
+              name="Configuration" 
+              parent="menu_promotions"
+              sequence="100"
+              groups="retail_promotions.group_promotion_manager"/>
+    
+    <!-- Submenú: Reportes de promociones -->
+    <menuitem id="menu_promotion_reports" 
+              name="Reports" 
+              parent="menu_promotions_config"
+              action="action_promotion_report" 
+              sequence="10"/>
+</odoo>
