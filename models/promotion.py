@@ -105,6 +105,7 @@ class Promotion(models.Model):
     days_remaining = fields.Integer(
         string='Days Remaining',
         compute='_compute_days_remaining',
+        store=True,
         help='Days remaining until promotion expires'
     )
     
@@ -176,6 +177,8 @@ class Promotion(models.Model):
         for promotion in self:
             promotion.is_valid = (
                 promotion.active and
+                promotion.start_date and
+                promotion.end_date and
                 promotion.start_date <= today <= promotion.end_date
             )
     
@@ -189,18 +192,21 @@ class Promotion(models.Model):
             else:
                 promotion.days_remaining = 0
     
-    @api.depends('active', 'is_valid', 'end_date')
-    def _compute_state(self):
-        today = fields.Date.today()
-        for promotion in self:
-            if not promotion.active:
-                promotion.state = 'cancelled'
-            elif promotion.end_date < today:
-                promotion.state = 'expired'
-            elif promotion.is_valid:
-                promotion.state = 'active'
-            else:
-                promotion.state = 'draft'
+@api.depends('active', 'is_valid', 'end_date')
+def _compute_state(self):
+    today = fields.Date.today()
+    for promotion in self:
+        if not promotion.active:
+            promotion.state = 'cancelled'
+        elif not promotion.end_date:
+            # Si no hay fecha de fin, es draft
+            promotion.state = 'draft'
+        elif promotion.end_date < today:
+            promotion.state = 'expired'
+        elif promotion.is_valid:
+            promotion.state = 'active'
+        else:
+            promotion.state = 'draft'
     
     # ====================================
     # VALIDACIONES
@@ -406,27 +412,4 @@ class Promotion(models.Model):
             else:
                 name += f" ({promotion.fixed_discount} {promotion.currency_id.symbol})"
             result.append((promotion.id, name))
-        return result self:
-            if promocion.usos_actuales > 0:
-                raise UserError(
-                    f"No se puede eliminar la promoción '{promocion.nombre}' "
-                    f"porque ya tiene {promocion.usos_actuales} usos registrados."
-                )
-        
-        return super().unlink()
-    
-    # ====================================
-    # MÉTODOS DE VISTA
-    # ====================================
-    
-    def name_get(self):
-        """Personaliza cómo se muestra el nombre en relaciones Many2one"""
-        result = []
-        for promocion in self:
-            name = f"[{promocion.codigo}] {promocion.nombre}"
-            if promocion.tipo_descuento == 'porcentaje':
-                name += f" ({promocion.descuento}%)"
-            else:
-                name += f" ({promocion.descuento_fijo} {promocion.currency_id.symbol})"
-            result.append((promocion.id, name))
         return result

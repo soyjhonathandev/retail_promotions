@@ -1,25 +1,10 @@
 id,name,model_id:id,group_id:id,perm_read,perm_write,perm_create,perm_unlink
-# ====================================
-# PERMISOS PARA MODELO PROMOTION
-# ====================================
 access_promotion_user,retail.promotion.user,model_retail_promotion,group_promotion_user,1,0,0,0
 access_promotion_supervisor,retail.promotion.supervisor,model_retail_promotion,group_promotion_supervisor,1,1,1,0
 access_promotion_manager,retail.promotion.manager,model_retail_promotion,group_promotion_manager,1,1,1,1
-
-# ====================================
-# PERMISOS PARA MODELOS RELACIONADOS
-# ====================================
-# Acceso a productos para asociar promociones
 access_product_product_promotion_user,product.product.promotion.user,product.model_product_product,group_promotion_user,1,0,0,0
 access_product_template_promotion_user,product.template.promotion.user,product.model_product_template,group_promotion_user,1,0,0,0
 access_product_category_promotion_user,product.category.promotion.user,product.model_product_category,group_promotion_user,1,0,0,0
-
-# Acceso a órdenes de venta para aplicar promociones
 access_sale_order_promotion_user,sale.order.promotion.user,sale.model_sale_order,group_promotion_user,1,1,0,0
 access_sale_order_line_promotion_user,sale.order.line.promotion.user,sale.model_sale_order_line,group_promotion_user,1,1,0,0
-
-# ====================================
-# PERMISOS PARA ADMINISTRADORES
-# ====================================
-# Administradores del sistema tienen acceso completo
 access_promotion_admin,retail.promotion.admin,model_retail_promotion,base.group_system,1,1,1,1

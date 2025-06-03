@@ -1,7 +1,7 @@
 <?xml version="1.0" encoding="utf-8"?>
 <odoo>
     <!-- ====================================
-         EXTENSIÓN DE VISTA DE PRODUCTO TEMPLATE
+         EXTENSIÓN MÍNIMA DE VISTA DE PRODUCTO
          ==================================== -->
     
     <record id="product_template_form_promotions" model="ir.ui.view">
@@ -9,54 +9,21 @@
         <field name="model">product.template</field>
         <field name="inherit_id" ref="product.product_template_only_form_view"/>
         <field name="arch" type="xml">
-            <!-- Botón estadístico para promociones -->
-            <div name="button_box" position="inside">
-                <button class="oe_stat_button" 
-                        type="object" 
-                        name="action_view_promotions"
-                        icon="fa-tags"
-                        attrs="{'invisible': [('has_valid_promotion', '=', False)]}">
-                    <div class="o_field_widget o_stat_info">
-                        <span class="o_stat_value">
-                            <field name="promotion_ids" widget="integer"/>
-                        </span>
-                        <span class="o_stat_text">Active Promotions</span>
-                    </div>
-                </button>
-            </div>
-            
-            <!-- Campos de promoción en información general -->
-            <field name="list_price" position="after">
-                <field name="has_valid_promotion" invisible="1"/>
-                <field name="best_discount" 
-                       attrs="{'invisible': [('has_valid_promotion', '=', False)]}"
-                       widget="percentage"
-                       readonly="1"/>
-                <field name="promotional_price" 
-                       attrs="{'invisible': [('has_valid_promotion', '=', False)]}"
-                       widget="monetary"
-                       readonly="1"/>
-            </field>
-            
             <!-- Tab de promociones -->
             <xpath expr="//notebook" position="inside">
-                <page string="Promotions" name="promotions" attrs="{'invisible': [('type', '!=', 'product')]}">
+                <page string="Promotions" name="promotions">
                     <!-- Resumen de promociones activas -->
                     <div class="alert alert-info" 
-                         attrs="{'invisible': [('has_valid_promotion', '=', False)]}" 
+                         invisible="not has_valid_promotion" 
                          role="alert">
                         <h4 class="alert-heading">
                             <i class="fa fa-tags"/> Active Promotions Found!
                         </h4>
-                        <p>This product has <strong><field name="promotion_ids" readonly="1"/> active promotion(s)</strong>.</p>
-                        <p class="mb-0">
-                            Best discount: <strong><field name="best_discount" widget="percentage" readonly="1"/></strong> |
-                            Promotional price: <strong><field name="promotional_price" widget="monetary" readonly="1"/></strong>
-                        </p>
+                        <p>This product has active promotions.</p>
                     </div>
                     
                     <div class="alert alert-warning" 
-                         attrs="{'invisible': [('has_valid_promotion', '=', True)]}" 
+                         invisible="has_valid_promotion" 
                          role="alert">
                         <h4 class="alert-heading">
                             <i class="fa fa-info-circle"/> No Active Promotions
@@ -64,51 +31,23 @@
                         <p class="mb-0">This product is not included in any active promotion.</p>
                     </div>
                     
-                    <!-- Lista de promociones -->
+                    <!-- Campos ocultos necesarios -->
+                    <field name="has_valid_promotion" invisible="1"/>
+                    <field name="best_discount" invisible="1"/>
+                    <field name="promotional_price" invisible="1"/>
+                    
+                    <!-- Lista de promociones simplificada -->
                     <group string="Current Promotions">
                         <field name="promotion_ids" nolabel="1" readonly="1">
-                            <tree decoration-success="state == 'active'"
-                                  decoration-warning="days_remaining &lt;= 7"
-                                  decoration-danger="state == 'expired'">
+                            <tree>
                                 <field name="code"/>
                                 <field name="name"/>
                                 <field name="discount_type"/>
-                                <field name="discount" 
-                                       attrs="{'invisible': [('discount_type', '!=', 'percentage')]}"
-                                       widget="percentage"/>
-                                <field name="fixed_discount" 
-                                       attrs="{'invisible': [('discount_type', '!=', 'fixed')]}"
-                                       widget="monetary"/>
                                 <field name="start_date"/>
                                 <field name="end_date"/>
-                                <field name="days_remaining"/>
                                 <field name="state"/>
-                                <field name="current_usage"/>
-                                <field name="usage_limit"/>
-                                
-                                <!-- Botones de acción -->
-                                <button name="action_activate" 
-                                        type="object" 
-                                        icon="fa-play" 
-                                        title="Activate Promotion"
-                                        attrs="{'invisible': [('active', '=', True)]}"/>
-                                
-                                <button name="action_deactivate" 
-                                        type="object" 
-                                        icon="fa-pause" 
-                                        title="Deactivate Promotion"
-                                        attrs="{'invisible': [('active', '=', False)]}"/>
                             </tree>
                         </field>
-                    </group>
-                    
-                    <!-- Widget personalizado para promociones -->
-                    <group string="Promotion Calculator">
-                        <div class="promotion-calculator">
-                            <p>Calculate potential savings with current promotions:</p>
-                            <!-- Widget personalizado se cargaría aquí -->
-                            <field name="promotion_ids" widget="promotion_field" nolabel="1"/>
-                        </div>
                     </group>
                 </page>
             </xpath>
@@ -116,7 +55,7 @@
     </record>
     
     <!-- ====================================
-         EXTENSIÓN DE VISTA DE LISTA DE PRODUCTOS
+         EXTENSIÓN MÍNIMA DE VISTA DE LISTA
          ==================================== -->
     
     <record id="product_template_tree_promotions" model="ir.ui.view">
@@ -124,122 +63,11 @@
         <field name="model">product.template</field>
         <field name="inherit_id" ref="product.product_template_tree_view"/>
         <field name="arch" type="xml">
-            <!-- Añadir columnas de promoción -->
+            <!-- Añadir columnas básicas de promoción -->
             <field name="list_price" position="after">
-                <field name="has_valid_promotion" invisible="1"/>
-                <field name="best_discount" 
-                       optional="hide"
-                       widget="percentage"
-                       attrs="{'invisible': [('has_valid_promotion', '=', False)]}"/>
-                <field name="promotional_price" 
-                       optional="hide"
-                       widget="monetary"
-                       attrs="{'invisible': [('has_valid_promotion', '=', False)]}"/>
+                <field name="has_valid_promotion" optional="hide"/>
+                <field name="best_discount" optional="hide" widget="percentage"/>
             </field>
-            
-            <!-- Decoraciones para productos con promociones -->
-            <tree position="attributes">
-                <attribute name="decoration-info">has_valid_promotion == True</attribute>
-            </tree>
-        </field>
-    </record>
-    
-    <!-- ====================================
-         EXTENSIÓN DE VISTA KANBAN DE PRODUCTOS
-         ==================================== -->
-    
-    <record id="product_template_kanban_promotions" model="ir.ui.view">
-        <field name="name">product.template.kanban.promotions</field>
-        <field name="model">product.template</field>
-        <field name="inherit_id" ref="product.product_template_kanban_view"/>
-        <field name="arch" type="xml">
-            <!-- Añadir campos necesarios -->
-            <field name="activity_ids" position="after">
-                <field name="has_valid_promotion"/>
-                <field name="best_discount"/>
-                <field name="promotional_price"/>
-            </field>
-            
-            <!-- Añadir badge de promoción -->
-            <div class="oe_kanban_bottom_left" position="inside">
-                <div class="badge badge-success promotion-badge" 
-                     t-if="record.has_valid_promotion.raw_value">
-                    <i class="fa fa-tags"/> 
-                    <t t-if="record.best_discount.raw_value">
-                        <t t-esc="record.best_discount.raw_value"/>% OFF
-                    </t>
-                    <t t-else="">
-                        PROMOTION
-                    </t>
-                </div>
-            </div>
-            
-            <!-- Mostrar precio promocional -->
-            <div class="oe_kanban_details" position="inside">
-                <div t-if="record.has_valid_promotion.raw_value" class="promotion-price">
-                    <del class="text-muted">
-                        <field name="list_price" widget="monetary"/>
-                    </del>
-                    <span class="text-success font-weight-bold">
-                        <field name="promotional_price" widget="monetary"/>
-                    </span>
-                </div>
-            </div>
-        </field>
-    </record>
-    
-    <!-- ====================================
-         VISTA DE BÚSQUEDA EXTENDIDA
-         ==================================== -->
-    
-    <record id="product_template_search_promotions" model="ir.ui.view">
-        <field name="name">product.template.search.promotions</field>
-        <field name="model">product.template</field>
-        <field name="inherit_id" ref="product.product_template_search_view"/>
-        <field name="arch" type="xml">
-            <!-- Filtros de promociones -->
-            <filter name="services" position="after">
-                <separator/>
-                <filter name="with_promotions" 
-                        string="With Active Promotions" 
-                        domain="[('has_valid_promotion', '=', True)]"/>
-                <filter name="without_promotions" 
-                        string="Without Promotions" 
-                        domain="[('has_valid_promotion', '=', False)]"/>
-                <filter name="high_discount" 
-                        string="High Discount (>20%)" 
-                        domain="[('best_discount', '>', 20)]"/>
-            </filter>
-            
-            <!-- Agrupaciones -->
-            <group expand="0" string="Group By" position="inside">
-                <filter name="group_promotions" 
-                        string="Promotion Status" 
-                        context="{'group_by': 'has_valid_promotion'}"/>
-            </group>
-        </field>
-    </record>
-    
-    <!-- ====================================
-         ACCIÓN PARA VER PROMOCIONES DEL PRODUCTO
-         ==================================== -->
-    
-    <record id="action_product_promotions" model="ir.actions.act_window">
-        <field name="name">Product Promotions</field>
-        <field name="res_model">retail.promotion</field>
-        <field name="view_mode">tree,form,kanban</field>
-        <field name="domain">[('product_ids', 'in', active_ids)]</field>
-        <field name="context">{
-            'search_default_valid': 1,
-            'default_product_ids': [(6, 0, active_ids)]
-        }</field>
-        <field name="help" type="html">
-            <p class="o_view_nocontent_smiling_face">
-                No promotions found for this product
-            </p>
-            <p>
-                You can create a new promotion that includes this product.
-            </p>
         </field>
     </record>
 </odoo>

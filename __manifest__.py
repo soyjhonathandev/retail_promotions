@@ -43,17 +43,14 @@
         # Datos base
         'data/ir_sequence_data.xml',
         
-        # Vistas
-        'views/promocion_views.xml',
+        # Vistas principales
+        'views/promotion_views.xml',
         'views/product_template_views.xml',
         'views/sale_order_views.xml',
-        
-        # Reportes
-        'reports/promotion_report.xml',
-        'reports/promotion_templates.xml',
-        
-        # Menús
         'views/menu_views.xml',
+        
+        # Datos demo
+        'demo/promotion_demo.xml',
     ],
     
     'demo': [

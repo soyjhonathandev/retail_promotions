@@ -76,13 +76,4 @@
         <field name="perm_create" eval="True"/>
         <field name="perm_unlink" eval="True"/>
     </record>
-    
-    <!-- ====================================
-         CONFIGURACIÓN DE MENÚS POR GRUPOS
-         ==================================== -->
-    
-    <!-- Solo gerentes pueden acceder a configuración -->
-    <record id="menu_promotions_config" model="ir.ui.menu">
-        <field name="groups_id" eval="[(6, 0, [ref('group_promotion_manager')])]"/>
-    </record>
 </odoo>
