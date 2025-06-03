@@ -1,4 +1,4 @@
- Retail Promotions - Módulo de Promociones para Odoo
+# Retail Promotions - Módulo de Promociones para Odoo
 Sistema completo de gestión de descuentos promocionales diseñado específicamente para retail, que permite crear, gestionar y aplicar promociones automáticamente en órdenes de venta.
 Características Principales: 
 
@@ -37,7 +37,7 @@ Control de uso con estadísticas en tiempo real
 Validaciones automáticas de datos
 Seguimiento de cambios con chatter
 
-🚀 Instalación
+## Instalación
 📡 Para Odoo.sh (Cloud)
 
 Fork del Repositorio: Crea un fork de este repositorio en tu cuenta de GitHub
@@ -52,16 +52,16 @@ bash# Clonar el repositorio en la carpeta de módulos
 cd /path/to/odoo/extra-addons
 git clone https://github.com/tu-usuario/retail-promotions.git
 
-# Reiniciar el servidor Odoo
+## Reiniciar el servidor Odoo
 sudo systemctl restart odoo
-# o
+
 ./odoo-bin -u retail_promotions -d tu_base_de_datos
 Opción 2: Con Docker
 bash# Si usas Docker Compose, agregar al volume de addons
 volumes:
   - ./retail-promotions:/mnt/extra-addons/retail_promotions
 
-# Reiniciar contenedor
+## Reiniciar contenedor
 docker-compose restart odoo
 🐳 Entorno Dockerizado Automatizado
 Si tienes problemas con la instalación on-premise, puedes usar mi entorno dockerizado preconfigurado:
