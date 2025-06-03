@@ -191,22 +191,22 @@ class Promotion(models.Model):
                 promotion.days_remaining = delta.days
             else:
                 promotion.days_remaining = 0
-    
-@api.depends('active', 'is_valid', 'end_date')
-def _compute_state(self):
-    today = fields.Date.today()
-    for promotion in self:
-        if not promotion.active:
-            promotion.state = 'cancelled'
-        elif not promotion.end_date:
-            # Si no hay fecha de fin, es draft
-            promotion.state = 'draft'
-        elif promotion.end_date < today:
-            promotion.state = 'expired'
-        elif promotion.is_valid:
-            promotion.state = 'active'
-        else:
-            promotion.state = 'draft'
+
+    @api.depends('active', 'is_valid', 'end_date')
+    def _compute_state(self):
+        today = fields.Date.today()
+        for promotion in self:
+            if not promotion.active:
+                promotion.state = 'cancelled'
+            elif not promotion.end_date:
+                # Si no hay fecha de fin, es draft
+                promotion.state = 'draft'
+            elif promotion.end_date < today:
+                promotion.state = 'expired'
+            elif promotion.is_valid:
+                promotion.state = 'active'
+            else:
+                promotion.state = 'draft'
     
     # ====================================
     # VALIDACIONES
