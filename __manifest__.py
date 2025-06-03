@@ -28,17 +28,10 @@
         * Duplicación de promociones
         * Activación/desactivación rápida
         
-        Mejoras en v1.1.0:
-        * Vista Kanban interactiva con estados visuales
-        * Aplicación automática mejorada de promociones
-        * Mejor cálculo de descuentos en líneas de venta
-        * Validación de vigencia en tiempo real
-        * Duplicación corregida de promociones
-        * Botones de activación/desactivación funcionales
     """,
     
     'author': 'Jhonathan Saldarriaga',
-    'website': 'https://github.com/jsaldarriaga',
+    'website': 'https://github.com/soyjhonathandev',
     'category': 'Sales/Sales',
     'license': 'LGPL-3',
     
@@ -85,7 +78,7 @@
     
     # Información adicional
     'images': ['static/description/icon.png'],
-    'maintainers': ['jsaldarriaga'],
+    'maintainers': ['Jhonathan Saldarriaga'],
     'contributors': ['Jhonathan Saldarriaga'],
     
     # Configuración de actualización
