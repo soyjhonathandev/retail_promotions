@@ -3,16 +3,21 @@ Sistema completo de gestión de descuentos promocionales diseñado específicame
 Características Principales: 
 
 🎯 Aplicación Automática: Las promociones se aplican automáticamente al agregar productos a órdenes de venta
+
 📊 Vista Kanban Visual: Gestión intuitiva con tarjetas que muestran estado, descuento y días restantes
+
 ⏰ Validación de Vigencia: Control automático de fechas de inicio y fin de promociones
+
 💰 Tipos de Descuento: Soporte para descuentos porcentuales y montos fijos
+
 🔄 Estados Inteligentes: Draft, Active, Expired, Cancelled con cálculo automático
+
 🛡️ Control de Límites: Límites de uso total y por cliente
+
 📈 Reportes Integrados: Estadísticas de uso y análisis de promociones
+
 🔐 Seguridad por Roles: Permisos diferenciados para usuarios, supervisores y gerentes
 
-Funcionalidades Implementadas
-Vista Kanban Interactiva
 
 Tarjetas visuales con estados de color
 Información de descuento prominente
@@ -64,7 +69,9 @@ volumes:
 ## Reiniciar contenedor
 docker-compose restart odoo
 🐳 Entorno Dockerizado Automatizado
+
 Si tienes problemas con la instalación on-premise, puedes usar mi entorno dockerizado preconfigurado:
+
 📧 Contacto para Deploy: Ponte en contacto conmigo para hacer un despliegue en mi entorno Docker automatizado que ya está configurado para reconocer módulos nuevos automáticamente.
 
 Vista previa
