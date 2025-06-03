@@ -1,4 +1,4 @@
-/* Estilos para el módulo de promociones */
+/* Estilos básicos para el módulo de promociones */
 
 /* Badges de estado de promoción */
 .promotion-badge {
@@ -44,49 +44,13 @@
     box-shadow: 0 4px 8px rgba(0,0,0,0.1);
 }
 
-.o_kanban_view .oe_kanban_card.promotion-card.vigente {
+.o_kanban_view .oe_kanban_card.promotion-card.active {
     border-left-color: #28a745;
 }
 
-.o_kanban_view .oe_kanban_card.promotion-card.vencida {
+.o_kanban_view .oe_kanban_card.promotion-card.expired {
     border-left-color: #dc3545;
     opacity: 0.7;
-}
-
-/* Iconos de promoción */
-.promotion-icon {
-    color: #ff6b6b;
-    font-size: 1.2em;
-}
-
-.promotion-icon.active {
-    color: #51cf66;
-}
-
-/* Alertas personalizadas */
-.alert.promotion-alert {
-    border-radius: 8px;
-    border: none;
-    padding: 1rem 1.5rem;
-    margin-bottom: 1rem;
-}
-
-.alert.promotion-alert.vigente {
-    background-color: #d4edda;
-    color: #155724;
-    border-left: 4px solid #28a745;
-}
-
-.alert.promotion-alert.vencida {
-    background-color: #f8d7da;
-    color: #721c24;
-    border-left: 4px solid #dc3545;
-}
-
-.alert.promotion-alert.por-vencer {
-    background-color: #fff3cd;
-    color: #856404;
-    border-left: 4px solid #ffc107;
 }
 
 /* Campos de descuento */
@@ -94,18 +58,6 @@
     font-size: 1.5em;
     font-weight: bold;
     color: #e74c3c;
-}
-
-.discount-display.percentage::after {
-    content: '%';
-    font-size: 0.8em;
-    margin-left: 2px;
-}
-
-.discount-display.fixed::before {
-    content: '$';
-    font-size: 0.8em;
-    margin-right: 2px;
 }
 
 /* Líneas de orden con promoción */
@@ -116,51 +68,6 @@
 
 .promotion-discount {
     color: #28a745;
-    font-weight: bold;
-}
-
-.promotion-discount::before {
-    content: '-';
-}
-
-/* Botones de promoción */
-.btn-promotion {
-    background-color: #ff6b6b;
-    border-color: #ff6b6b;
-    color: white;
-}
-
-.btn-promotion:hover {
-    background-color: #ff5252;
-    border-color: #ff5252;
-    color: white;
-}
-
-.btn-promotion:active,
-.btn-promotion:focus {
-    background-color: #ff4444;
-    border-color: #ff4444;
-    box-shadow: 0 0 0 0.2rem rgba(255, 107, 107, 0.25);
-}
-
-/* Widget de vista previa de promociones */
-.promotion-preview-widget {
-    border: 1px solid #dee2e6;
-    border-radius: 8px;
-    padding: 1rem;
-    margin: 0.5rem 0;
-    background-color: #f8f9fa;
-}
-
-.promotion-preview-widget .promotion-name {
-    font-weight: bold;
-    color: #495057;
-    margin-bottom: 0.5rem;
-}
-
-.promotion-preview-widget .promotion-savings {
-    color: #28a745;
-    font-size: 1.1em;
     font-weight: bold;
 }
 
@@ -190,72 +97,4 @@
     font-size: 0.8em;
     color: #6c757d;
     text-transform: uppercase;
-}
-
-/* Responsive */
-@media (max-width: 768px) {
-    .promotion-stats {
-        flex-direction: column;
-        gap: 0.5rem;
-    }
-    
-    .promotion-stats .stat-item {
-        width: 100%;
-    }
-    
-    .o_kanban_view .oe_kanban_card.promotion-card {
-        margin-bottom: 1rem;
-    }
-}
-
-/* Animaciones */
-@keyframes pulse-promotion {
-    0% {
-        box-shadow: 0 0 0 0 rgba(255, 107, 107, 0.7);
-    }
-    70% {
-        box-shadow: 0 0 0 10px rgba(255, 107, 107, 0);
-    }
-    100% {
-        box-shadow: 0 0 0 0 rgba(255, 107, 107, 0);
-    }
-}
-
-.promotion-pulse {
-    animation: pulse-promotion 2s infinite;
-}
-
-/* Mejoras de accesibilidad */
-.promotion-accessible-text {
-    position: absolute;
-    left: -10000px;
-    width: 1px;
-    height: 1px;
-    overflow: hidden;
-}
-
-/* Estados de carga */
-.promotion-loading {
-    opacity: 0.6;
-    pointer-events: none;
-    position: relative;
-}
-
-.promotion-loading::after {
-    content: '';
-    position: absolute;
-    top: 50%;
-    left: 50%;
-    width: 20px;
-    height: 20px;
-    margin: -10px 0 0 -10px;
-    border: 2px solid #f3f3f3;
-    border-top: 2px solid #007bff;
-    border-radius: 50%;
-    animation: spin 1s linear infinite;
-}
-
-@keyframes spin {
-    0% { transform: rotate(0deg); }
-    100% { transform: rotate(360deg); }
 }

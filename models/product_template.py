@@ -48,26 +48,31 @@ class ProductTemplate(models.Model):
             promotions = self.env['retail.promotion']
             
             # Buscar promociones por productos específicos
-            for variant in template.product_variant_ids:
-                promotions |= self.env['retail.promotion'].search([
-                    ('product_ids', 'in', [variant.id]),
-                    ('is_valid', '=', True)
-                ])
+            if template.product_variant_ids:
+                for variant in template.product_variant_ids:
+                    variant_promotions = self.env['retail.promotion'].search([
+                        ('product_ids', 'in', [variant.id]),
+                        ('is_valid', '=', True)
+                    ])
+                    promotions |= variant_promotions
             
             # Buscar promociones por categoría
-            promotions |= self.env['retail.promotion'].search([
-                ('category_ids', 'in', [template.categ_id.id]),
-                ('is_valid', '=', True)
-            ])
-            
-            # Buscar en categorías padre
-            current_category = template.categ_id.parent_id
-            while current_category:
-                promotions |= self.env['retail.promotion'].search([
-                    ('category_ids', 'in', [current_category.id]),
+            if template.categ_id:
+                category_promotions = self.env['retail.promotion'].search([
+                    ('category_ids', 'in', [template.categ_id.id]),
                     ('is_valid', '=', True)
                 ])
-                current_category = current_category.parent_id
+                promotions |= category_promotions
+                
+                # Buscar en categorías padre
+                current_category = template.categ_id.parent_id
+                while current_category:
+                    parent_promotions = self.env['retail.promotion'].search([
+                        ('category_ids', 'in', [current_category.id]),
+                        ('is_valid', '=', True)
+                    ])
+                    promotions |= parent_promotions
+                    current_category = current_category.parent_id
             
             template.promotion_ids = promotions
             template.has_valid_promotion = bool(promotions)
@@ -122,7 +127,7 @@ class ProductTemplate(models.Model):
                 product=variant
             )
         
-        return promotions
+        return promotions.filtered('is_valid')
     
     def get_best_promotion(self):
         """Obtiene la mejor promoción disponible para el producto"""
@@ -203,8 +208,21 @@ class ProductProduct(models.Model):
                     if best_promotion.discount_type == 'percentage':
                         name += f" (🏷️ -{best_promotion.discount}%)"
                     else:
-                        name += f" (🏷️ -${best_promotion.fixed_discount})"
+                        name += f" (🏷️ -{best_promotion.currency_id.symbol}{best_promotion.fixed_discount})"
             
             result.append((product.id, name))
         
         return result
+
+
+class ProductCategory(models.Model):
+    _inherit = 'product.category'
+    
+    def _get_parent_categories(self):
+        """Obtiene todas las categorías padre"""
+        categories = self
+        current = self.parent_id
+        while current:
+            categories |= current
+            current = current.parent_id
+        return categories

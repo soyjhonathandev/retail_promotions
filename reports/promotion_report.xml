@@ -1,0 +1,417 @@
+<?xml version="1.0" encoding="utf-8"?>
+<odoo>
+    <!-- ====================================
+         ACCIÓN DE REPORTE
+         ==================================== -->
+    
+    <record id="action_report_promotion" model="ir.actions.report">
+        <field name="name">Promotion Report</field>
+        <field name="model">retail.promotion</field>
+        <field name="report_type">qweb-pdf</field>
+        <field name="report_name">retail_promotions.report_promotion</field>
+        <field name="report_file">retail_promotions.report_promotion</field>
+        <field name="binding_model_id" ref="model_retail_promotion"/>
+        <field name="binding_type">report</field>
+        <field name="paperformat_id" ref="base.paperformat_euro"/>
+    </record>
+    
+    <!-- ====================================
+         PLANTILLA DEL REPORTE
+         ==================================== -->
+    
+    <template id="report_promotion">
+        <t t-call="web.html_container">
+            <t t-foreach="docs" t-as="o">
+                <t t-call="web.external_layout">
+                    <div class="page">
+                        <div class="oe_structure"/>
+                        
+                        <!-- Header del reporte -->
+                        <div class="row">
+                            <div class="col-12">
+                                <h2 class="text-center mb-4">
+                                    <i class="fa fa-tags"/> Promotion Report
+                                </h2>
+                            </div>
+                        </div>
+                        
+                        <!-- Información principal de la promoción -->
+                        <div class="row mb-4">
+                            <div class="col-8">
+                                <h3><t t-esc="o.name"/></h3>
+                                <p class="text-muted">
+                                    <strong>Code:</strong> <t t-esc="o.code"/>
+                                </p>
+                                <t t-if="o.description">
+                                    <p><strong>Description:</strong></p>
+                                    <p t-field="o.description"/>
+                                </t>
+                            </div>
+                            <div class="col-4 text-right">
+                                <!-- Badge de estado -->
+                                <span t-if="o.state == 'active'" 
+                                      class="badge badge-success" 
+                                      style="font-size: 14px; padding: 8px 12px;">
+                                    <i class="fa fa-check"/> ACTIVE
+                                </span>
+                                <span t-elif="o.state == 'expired'" 
+                                      class="badge badge-danger" 
+                                      style="font-size: 14px; padding: 8px 12px;">
+                                    <i class="fa fa-times"/> EXPIRED
+                                </span>
+                                <span t-elif="o.state == 'draft'" 
+                                      class="badge badge-warning" 
+                                      style="font-size: 14px; padding: 8px 12px;">
+                                    <i class="fa fa-clock-o"/> DRAFT
+                                </span>
+                                <span t-else="" 
+                                      class="badge badge-secondary" 
+                                      style="font-size: 14px; padding: 8px 12px;">
+                                    <i class="fa fa-pause"/> INACTIVE
+                                </span>
+                            </div>
+                        </div>
+                        
+                        <!-- Detalles de la promoción -->
+                        <div class="row mb-4">
+                            <div class="col-12">
+                                <table class="table table-bordered">
+                                    <tr>
+                                        <td width="25%"><strong>Discount Type</strong></td>
+                                        <td width="25%">
+                                            <t t-if="o.discount_type == 'percentage'">
+                                                Percentage Discount
+                                            </t>
+                                            <t t-else="">
+                                                Fixed Amount Discount
+                                            </t>
+                                        </td>
+                                        <td width="25%"><strong>Discount Value</strong></td>
+                                        <td width="25%">
+                                            <t t-if="o.discount_type == 'percentage'">
+                                                <span class="text-success" style="font-size: 18px; font-weight: bold;">
+                                                    <t t-esc="o.discount"/>%
+                                                </span>
+                                            </t>
+                                            <t t-else="">
+                                                <span class="text-success" style="font-size: 18px; font-weight: bold;">
+                                                    <t t-field="o.fixed_discount" 
+                                                       t-options="{'widget': 'monetary', 'display_currency': o.currency_id}"/>
+                                                </span>
+                                            </t>
+                                        </td>
+                                    </tr>
+                                    <tr>
+                                        <td><strong>Start Date</strong></td>
+                                        <td><t t-field="o.start_date"/></td>
+                                        <td><strong>End Date</strong></td>
+                                        <td><t t-field="o.end_date"/></td>
+                                    </tr>
+                                    <tr>
+                                        <td><strong>Days Remaining</strong></td>
+                                        <td>
+                                            <t t-if="o.days_remaining >= 0">
+                                                <span t-if="o.days_remaining <= 7" class="text-warning">
+                                                    <t t-esc="o.days_remaining"/> days
+                                                </span>
+                                                <span t-else="" class="text-success">
+                                                    <t t-esc="o.days_remaining"/> days
+                                                </span>
+                                            </t>
+                                            <t t-else="">
+                                                <span class="text-danger">Expired</span>
+                                            </t>
+                                        </td>
+                                        <td><strong>Valid</strong></td>
+                                        <td>
+                                            <t t-if="o.is_valid">
+                                                <span class="text-success"><i class="fa fa-check"/> Yes</span>
+                                            </t>
+                                            <t t-else="">
+                                                <span class="text-danger"><i class="fa fa-times"/> No</span>
+                                            </t>
+                                        </td>
+                                    </tr>
+                                    <tr t-if="o.minimum_amount > 0">
+                                        <td><strong>Minimum Amount</strong></td>
+                                        <td>
+                                            <t t-field="o.minimum_amount" 
+                                               t-options="{'widget': 'monetary', 'display_currency': o.currency_id}"/>
+                                        </td>
+                                        <td><strong>Usage Limit</strong></td>
+                                        <td>
+                                            <t t-if="o.usage_limit > 0">
+                                                <t t-esc="o.usage_limit"/> times
+                                            </t>
+                                            <t t-else="">
+                                                Unlimited
+                                            </t>
+                                        </td>
+                                    </tr>
+                                    <tr>
+                                        <td><strong>Current Usage</strong></td>
+                                        <td>
+                                            <t t-esc="o.current_usage"/> times
+                                            <t t-if="o.usage_limit > 0">
+                                                (<t t-esc="round((o.current_usage / o.usage_limit) * 100, 1)"/>% used)
+                                            </t>
+                                        </td>
+                                        <td><strong>Customer Limit</strong></td>
+                                        <td>
+                                            <t t-if="o.customer_limit > 0">
+                                                <t t-esc="o.customer_limit"/> times per customer
+                                            </t>
+                                            <t t-else="">
+                                                Unlimited per customer
+                                            </t>
+                                        </td>
+                                    </tr>
+                                </table>
+                            </div>
+                        </div>
+                        
+                        <!-- Productos incluidos -->
+                        <t t-if="o.product_ids">
+                            <div class="row mb-4">
+                                <div class="col-12">
+                                    <h4><i class="fa fa-cube"/> Included Products</h4>
+                                    <table class="table table-sm table-bordered">
+                                        <thead class="thead-light">
+                                            <tr>
+                                                <th>Code</th>
+                                                <th>Product Name</th>
+                                                <th>Category</th>
+                                                <th class="text-right">List Price</th>
+                                                <th class="text-right">Promotional Price</th>
+                                                <th class="text-right">Savings</th>
+                                            </tr>
+                                        </thead>
+                                        <tbody>
+                                            <t t-foreach="o.product_ids" t-as="product">
+                                                <tr>
+                                                    <td><t t-esc="product.default_code or ''"/></td>
+                                                    <td><t t-esc="product.name"/></td>
+                                                    <td><t t-esc="product.categ_id.name"/></td>
+                                                    <td class="text-right">
+                                                        <t t-field="product.list_price" 
+                                                           t-options="{'widget': 'monetary', 'display_currency': o.currency_id}"/>
+                                                    </td>
+                                                    <td class="text-right text-success">
+                                                        <t t-set="discount_amount" t-value="o.calculate_discount(product.list_price, 1)"/>
+                                                        <t t-set="promotional_price" t-value="product.list_price - discount_amount"/>
+                                                        <span t-esc="'%.2f' % promotional_price"/> <t t-esc="o.currency_id.symbol"/>
+                                                    </td>
+                                                    <td class="text-right text-danger">
+                                                        -<span t-esc="'%.2f' % discount_amount"/> <t t-esc="o.currency_id.symbol"/>
+                                                    </td>
+                                                </tr>
+                                            </t>
+                                        </tbody>
+                                    </table>
+                                </div>
+                            </div>
+                        </t>
+                        
+                        <!-- Categorías incluidas -->
+                        <t t-if="o.category_ids">
+                            <div class="row mb-4">
+                                <div class="col-12">
+                                    <h4><i class="fa fa-folder"/> Included Categories</h4>
+                                    <table class="table table-sm table-bordered">
+                                        <thead class="thead-light">
+                                            <tr>
+                                                <th>Category Name</th>
+                                                <th class="text-right">Product Count</th>
+                                            </tr>
+                                        </thead>
+                                        <tbody>
+                                            <t t-foreach="o.category_ids" t-as="category">
+                                                <tr>
+                                                    <td><t t-esc="category.complete_name"/></td>
+                                                    <td class="text-right"><t t-esc="category.product_count"/></td>
+                                                </tr>
+                                            </t>
+                                        </tbody>
+                                    </table>
+                                </div>
+                            </div>
+                        </t>
+                        
+                        <!-- Información adicional -->
+                        <div class="row">
+                            <div class="col-12">
+                                <div class="alert alert-info">
+                                    <h5><i class="fa fa-info-circle"/> Promotion Information</h5>
+                                    <p><strong>Terms and Conditions:</strong></p>
+                                    <ul>
+                                        <li>This promotion is valid from <strong><t t-field="o.start_date"/></strong> to <strong><t t-field="o.end_date"/></strong></li>
+                                        <li t-if="o.minimum_amount > 0">
+                                            Minimum purchase amount required: 
+                                            <strong>
+                                                <t t-field="o.minimum_amount" 
+                                                   t-options="{'widget': 'monetary', 'display_currency': o.currency_id}"/>
+                                            </strong>
+                                        </li>
+                                        <li t-if="o.usage_limit > 0">
+                                            Limited to <strong><t t-esc="o.usage_limit"/></strong> total uses
+                                        </li>
+                                        <li t-if="o.customer_limit > 0">
+                                            Limited to <strong><t t-esc="o.customer_limit"/></strong> uses per customer
+                                        </li>
+                                        <li>Promotion applies automatically when conditions are met</li>
+                                        <li>Cannot be combined with other promotions unless specified</li>
+                                    </ul>
+                                </div>
+                            </div>
+                        </div>
+                        
+                        <!-- Footer con fecha de generación -->
+                        <div class="row mt-4">
+                            <div class="col-12 text-center text-muted">
+                                <small>
+                                    Report generated on <t t-esc="context_timestamp(datetime.datetime.now()).strftime('%Y-%m-%d %H:%M:%S')"/>
+                                </small>
+                            </div>
+                        </div>
+                        
+                        <div class="oe_structure"/>
+                    </div>
+                </t>
+            </t>
+        </t>
+    </template>
+    
+    <!-- ====================================
+         REPORTE MÚLTIPLE DE PROMOCIONES
+         ==================================== -->
+    
+    <record id="action_report_promotions_multiple" model="ir.actions.report">
+        <field name="name">Promotions Summary Report</field>
+        <field name="model">retail.promotion</field>
+        <field name="report_type">qweb-pdf</field>
+        <field name="report_name">retail_promotions.report_promotions_summary</field>
+        <field name="report_file">retail_promotions.report_promotions_summary</field>
+        <field name="binding_model_id" ref="model_retail_promotion"/>
+        <field name="binding_type">report</field>
+        <field name="paperformat_id" ref="base.paperformat_euro"/>
+    </record>
+    
+    <template id="report_promotions_summary">
+        <t t-call="web.html_container">
+            <t t-call="web.external_layout">
+                <div class="page">
+                    <div class="oe_structure"/>
+                    
+                    <!-- Header del reporte -->
+                    <div class="row">
+                        <div class="col-12">
+                            <h2 class="text-center mb-4">
+                                <i class="fa fa-tags"/> Promotions Summary Report
+                            </h2>
+                            <p class="text-center text-muted">
+                                Generated on <t t-esc="context_timestamp(datetime.datetime.now()).strftime('%Y-%m-%d %H:%M:%S')"/>
+                            </p>
+                        </div>
+                    </div>
+                    
+                    <!-- Resumen estadístico -->
+                    <div class="row mb-4">
+                        <div class="col-12">
+                            <div class="alert alert-primary">
+                                <div class="row text-center">
+                                    <div class="col-3">
+                                        <h3><t t-esc="len(docs)"/></h3>
+                                        <small>Total Promotions</small>
+                                    </div>
+                                    <div class="col-3">
+                                        <h3 class="text-success">
+                                            <t t-esc="len([p for p in docs if p.state == 'active'])"/>
+                                        </h3>
+                                        <small>Active</small>
+                                    </div>
+                                    <div class="col-3">
+                                        <h3 class="text-warning">
+                                            <t t-esc="len([p for p in docs if p.days_remaining <= 7 and p.days_remaining >= 0])"/>
+                                        </h3>
+                                        <small>Expiring Soon</small>
+                                    </div>
+                                    <div class="col-3">
+                                        <h3 class="text-danger">
+                                            <t t-esc="len([p for p in docs if p.state == 'expired'])"/>
+                                        </h3>
+                                        <small>Expired</small>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                    
+                    <!-- Lista de promociones -->
+                    <div class="row">
+                        <div class="col-12">
+                            <table class="table table-bordered table-sm">
+                                <thead class="thead-dark">
+                                    <tr>
+                                        <th>Code</th>
+                                        <th>Name</th>
+                                        <th>Type</th>
+                                        <th>Discount</th>
+                                        <th>Valid Period</th>
+                                        <th>State</th>
+                                        <th class="text-right">Usage</th>
+                                    </tr>
+                                </thead>
+                                <tbody>
+                                    <t t-foreach="docs" t-as="promotion">
+                                        <tr>
+                                            <td><t t-esc="promotion.code"/></td>
+                                            <td><t t-esc="promotion.name"/></td>
+                                            <td>
+                                                <t t-if="promotion.discount_type == 'percentage'">
+                                                    Percentage
+                                                </t>
+                                                <t t-else="">
+                                                    Fixed Amount
+                                                </t>
+                                            </td>
+                                            <td>
+                                                <t t-if="promotion.discount_type == 'percentage'">
+                                                    <span class="text-success font-weight-bold">
+                                                        <t t-esc="promotion.discount"/>%
+                                                    </span>
+                                                </t>
+                                                <t t-else="">
+                                                    <span class="text-success font-weight-bold">
+                                                        <t t-field="promotion.fixed_discount" 
+                                                           t-options="{'widget': 'monetary', 'display_currency': promotion.currency_id}"/>
+                                                    </span>
+                                                </t>
+                                            </td>
+                                            <td>
+                                                <t t-field="promotion.start_date"/> - <t t-field="promotion.end_date"/>
+                                            </td>
+                                            <td>
+                                                <span t-if="promotion.state == 'active'" class="badge badge-success">Active</span>
+                                                <span t-elif="promotion.state == 'expired'" class="badge badge-danger">Expired</span>
+                                                <span t-elif="promotion.state == 'draft'" class="badge badge-warning">Draft</span>
+                                                <span t-else="" class="badge badge-secondary">Inactive</span>
+                                            </td>
+                                            <td class="text-right">
+                                                <t t-esc="promotion.current_usage"/>
+                                                <t t-if="promotion.usage_limit > 0">
+                                                    / <t t-esc="promotion.usage_limit"/>
+                                                </t>
+                                            </td>
+                                        </tr>
+                                    </t>
+                                </tbody>
+                            </table>
+                        </div>
+                    </div>
+                    
+                    <div class="oe_structure"/>
+                </div>
+            </t>
+        </t>
+    </template>
+</odoo>

@@ -1,42 +1,92 @@
 <?xml version="1.0" encoding="utf-8"?>
 <odoo>
-    <!-- Promociones de demostración -->
+    <!-- Promociones de demostración con fechas fijas válidas -->
+    
+    <!-- Promoción activa de verano -->
     <record id="promotion_demo_summer" model="retail.promotion">
-        <field name="name">Summer Discount 2024</field>
-        <field name="code">SUMMER2024</field>
-        <field name="description">Special summer promotion with 20% discount on selected products</field>
+        <field name="name">Summer Discount 2025</field>
+        <field name="code">SUMMER2025</field>
+        <field name="description">Special summer promotion with 15% discount on selected products. Perfect for seasonal sales!</field>
         <field name="active" eval="True"/>
         <field name="discount_type">percentage</field>
-        <field name="discount">20.0</field>
-        <field name="start_date" eval="(DateTime.now() - timedelta(days=10)).strftime('%Y-%m-%d')"/>
-        <field name="end_date" eval="(DateTime.now() + timedelta(days=20)).strftime('%Y-%m-%d')"/>
+        <field name="discount">15.0</field>
+        <field name="start_date">2025-06-01</field>
+        <field name="end_date">2025-06-30</field>
         <field name="usage_limit">100</field>
         <field name="minimum_amount">50.0</field>
+        <field name="current_usage">12</field>
     </record>
     
+    <!-- Promoción de descuento fijo -->
     <record id="promotion_demo_fixed" model="retail.promotion">
         <field name="name">Fixed Discount $10</field>
         <field name="code">FIXED10</field>
-        <field name="description">Fixed discount of $10 on purchases over $100</field>
+        <field name="description">Fixed discount of $10 on purchases over $100. Great for bulk purchases!</field>
         <field name="active" eval="True"/>
         <field name="discount_type">fixed</field>
         <field name="fixed_discount">10.0</field>
-        <field name="start_date" eval="DateTime.now().strftime('%Y-%m-%d')"/>
-        <field name="end_date" eval="(DateTime.now() + timedelta(days=30)).strftime('%Y-%m-%d')"/>
+        <field name="start_date">2025-06-01</field>
+        <field name="end_date">2025-07-31</field>
         <field name="minimum_amount">100.0</field>
         <field name="customer_limit">2</field>
+        <field name="current_usage">3</field>
     </record>
     
+    <!-- Promoción próxima a vencer -->
+    <record id="promotion_demo_expiring" model="retail.promotion">
+        <field name="name">Flash Sale - Ending Soon!</field>
+        <field name="code">FLASH2025</field>
+        <field name="description">Flash sale with 25% discount - only few days left! Don't miss out!</field>
+        <field name="active" eval="True"/>
+        <field name="discount_type">percentage</field>
+        <field name="discount">25.0</field>
+        <field name="start_date">2025-05-25</field>
+        <field name="end_date">2025-06-10</field>
+        <field name="usage_limit">50</field>
+        <field name="current_usage">35</field>
+        <field name="minimum_amount">30.0</field>
+    </record>
+    
+    <!-- Promoción expirada (para demostrar estados) -->
     <record id="promotion_demo_expired" model="retail.promotion">
-        <field name="name">Christmas Promotion (Expired)</field>
-        <field name="code">CHRISTMAS2023</field>
+        <field name="name">Christmas Promotion 2024 (Expired)</field>
+        <field name="code">CHRISTMAS2024</field>
         <field name="description">Last year's Christmas promotion - example of expired promotion</field>
         <field name="active" eval="False"/>
         <field name="discount_type">percentage</field>
-        <field name="discount">15.0</field>
-        <field name="start_date" eval="(DateTime.now() - timedelta(days=120)).strftime('%Y-%m-%d')"/>
-        <field name="end_date" eval="(DateTime.now() - timedelta(days=90)).strftime('%Y-%m-%d')"/>
-        <field name="current_usage">25</field>
+        <field name="discount">20.0</field>
+        <field name="start_date">2024-12-01</field>
+        <field name="end_date">2024-12-31</field>
+        <field name="current_usage">45</field>
         <field name="usage_limit">50</field>
+    </record>
+    
+    <!-- Promoción en borrador (futuro) -->
+    <record id="promotion_demo_draft" model="retail.promotion">
+        <field name="name">Upcoming Black Friday</field>
+        <field name="code">BLACKFRIDAY2025</field>
+        <field name="description">Massive Black Friday discount - 30% off everything! Coming soon...</field>
+        <field name="active" eval="False"/>
+        <field name="discount_type">percentage</field>
+        <field name="discount">30.0</field>
+        <field name="start_date">2025-11-25</field>
+        <field name="end_date">2025-11-30</field>
+        <field name="usage_limit">200</field>
+        <field name="minimum_amount">25.0</field>
+    </record>
+    
+    <!-- Promoción adicional activa -->
+    <record id="promotion_demo_active_now" model="retail.promotion">
+        <field name="name">June Special Offer</field>
+        <field name="code">JUNE2025</field>
+        <field name="description">Special June promotion - 12% discount on all products!</field>
+        <field name="active" eval="True"/>
+        <field name="discount_type">percentage</field>
+        <field name="discount">12.0</field>
+        <field name="start_date">2025-06-01</field>
+        <field name="end_date">2025-06-15</field>
+        <field name="usage_limit">75</field>
+        <field name="current_usage">8</field>
+        <field name="minimum_amount">25.0</field>
     </record>
 </odoo>

@@ -2,7 +2,7 @@
 
 from odoo import models, fields, api, _
 from odoo.exceptions import ValidationError, UserError
-from datetime import datetime, date
+from datetime import datetime, date, timedelta
 
 class Promotion(models.Model):
     _name = 'retail.promotion'
@@ -199,7 +199,6 @@ class Promotion(models.Model):
             if not promotion.active:
                 promotion.state = 'cancelled'
             elif not promotion.end_date:
-                # Si no hay fecha de fin, es draft
                 promotion.state = 'draft'
             elif promotion.end_date < today:
                 promotion.state = 'expired'
@@ -215,7 +214,7 @@ class Promotion(models.Model):
     @api.constrains('start_date', 'end_date')
     def _check_dates(self):
         for promotion in self:
-            if promotion.end_date < promotion.start_date:
+            if promotion.start_date and promotion.end_date and promotion.end_date < promotion.start_date:
                 raise ValidationError(
                     "End date cannot be earlier than start date."
                 )
@@ -271,7 +270,7 @@ class Promotion(models.Model):
         if self.discount_type == 'percentage':
             discount = subtotal * (self.discount / 100)
         else:  # fixed
-            discount = min(self.fixed_discount, subtotal)  # No puede ser mayor al subtotal
+            discount = min(self.fixed_discount, subtotal)
         
         return discount
     
@@ -306,36 +305,46 @@ class Promotion(models.Model):
             raise UserError(
                 f"Promotion '{self.name}' has reached its usage limit."
             )
-        self.current_usage += 1
+        self.sudo().write({'current_usage': self.current_usage + 1})
     
     def action_activate(self):
         """Activa la promoción"""
-        self.write({'active': True})
-        self.message_post(body="Promotion activated")
+        for record in self:
+            record.write({'active': True})
+            record.message_post(body=_("Promotion activated"))
+        return True
     
     def action_deactivate(self):
         """Desactiva la promoción"""
-        self.write({'active': False})
-        self.message_post(body="Promotion deactivated")
+        for record in self:
+            record.write({'active': False})
+            record.message_post(body=_("Promotion deactivated"))
+        return True
     
     def action_duplicate(self):
         """Duplica la promoción con un nuevo código"""
         self.ensure_one()
         
-        # Generar nuevo código
-        new_code = f"{self.code}-COPY-{len(self.search([('code', 'like', f'{self.code}-COPY%')]))}"
+        # Generar nuevo código único
+        base_code = self.code.replace('-COPY', '').split('-')[0] if '-COPY' in self.code else self.code
+        copy_count = self.search_count([('code', 'like', f'{base_code}-COPY%')])
+        new_code = f"{base_code}-COPY-{copy_count + 1}"
         
-        new_record = self.copy({
+        # Crear nueva promoción
+        new_promotion = self.copy({
             'name': f"{self.name} (Copy)",
             'code': new_code,
             'active': False,
             'current_usage': 0,
+            'start_date': fields.Date.today(),
+            'end_date': fields.Date.today() + timedelta(days=30),
         })
         
         return {
             'type': 'ir.actions.act_window',
+            'name': _('Duplicated Promotion'),
             'res_model': 'retail.promotion',
-            'res_id': new_record.id,
+            'res_id': new_promotion.id,
             'view_mode': 'form',
             'target': 'current',
         }
@@ -353,10 +362,17 @@ class Promotion(models.Model):
         ]
         
         if product:
+            # Buscar por producto específico O por categorías
+            category_ids = [product.categ_id.id]
+            current_category = product.categ_id.parent_id
+            while current_category:
+                category_ids.append(current_category.id)
+                current_category = current_category.parent_id
+            
             domain.extend([
                 '|',
                 ('product_ids', 'in', [product.id]),
-                ('category_ids', 'in', [product.categ_id.id])
+                ('category_ids', 'in', category_ids)
             ])
         
         if category:
@@ -368,20 +384,22 @@ class Promotion(models.Model):
     # HOOKS DE CRUD
     # ====================================
     
-    @api.model
-    def create(self, vals):
-        # Generar código automático si no se proporciona
-        if not vals.get('code'):
-            vals['code'] = self.env['ir.sequence'].next_by_code('retail.promotion') or 'PROMO-NEW'
+    @api.model_create_multi
+    def create(self, vals_list):
+        for vals in vals_list:
+            # Generar código automático si no se proporciona
+            if not vals.get('code'):
+                vals['code'] = self.env['ir.sequence'].next_by_code('retail.promotion') or 'PROMO-NEW'
         
-        promotion = super().create(vals)
-        promotion.message_post(body=f"Promotion '{promotion.name}' created")
-        return promotion
+        promotions = super().create(vals_list)
+        for promotion in promotions:
+            promotion.message_post(body=f"Promotion '{promotion.name}' created")
+        return promotions
     
     def write(self, vals):
         # Log de cambios importantes
-        if 'active' in vals:
-            for promotion in self:
+        for promotion in self:
+            if 'active' in vals:
                 state = "activated" if vals['active'] else "deactivated"
                 promotion.message_post(body=f"Promotion {state}")
         

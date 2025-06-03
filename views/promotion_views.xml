@@ -1,7 +1,7 @@
 <?xml version="1.0" encoding="utf-8"?>
 <odoo>
     <!-- ====================================
-         ACCIONES (Definidas PRIMERO)
+         ACCIONES (Definidas PRIMERO) - ACTUALIZADO PARA INCLUIR KANBAN
          ==================================== -->
     
     <!-- Acción para órdenes de venta con promociones -->
@@ -13,12 +13,12 @@
         <field name="context">{}</field>
     </record>
     
-    <!-- Acción principal de promociones - SIN KANBAN -->
+    <!-- Acción principal de promociones - CON KANBAN -->
     <record id="action_promotions" model="ir.actions.act_window">
         <field name="name">Promotions</field>
         <field name="res_model">retail.promotion</field>
-        <field name="view_mode">tree,form</field>
-        <field name="context">{}</field>
+        <field name="view_mode">kanban,tree,form</field>
+        <field name="context">{'search_default_group_state': 1}</field>
         <field name="domain">[]</field>
         <field name="help" type="html">
             <p class="o_view_nocontent_smiling_face">
@@ -40,26 +40,189 @@
         </field>
     </record>
     
-    <!-- Acción para promociones vigentes - SIN KANBAN -->
+    <!-- Acción para promociones vigentes - CON KANBAN -->
     <record id="action_valid_promotions" model="ir.actions.act_window">
         <field name="name">Valid Promotions</field>
         <field name="res_model">retail.promotion</field>
-        <field name="view_mode">tree,form</field>
+        <field name="view_mode">kanban,tree,form</field>
         <field name="context">{'search_default_valid': 1}</field>
         <field name="domain">[('is_valid', '=', True)]</field>
     </record>
     
-    <!-- Acción para promociones por vencer - SIN KANBAN -->
+    <!-- Acción para promociones por vencer - CON KANBAN -->
     <record id="action_expiring_promotions" model="ir.actions.act_window">
         <field name="name">Expiring Promotions</field>
         <field name="res_model">retail.promotion</field>
-        <field name="view_mode">tree,form</field>
+        <field name="view_mode">kanban,tree,form</field>
         <field name="context">{'search_default_expiring_soon': 1}</field>
         <field name="domain">[('days_remaining', '&lt;=', 7), ('days_remaining', '>=', 0)]</field>
     </record>
 
     <!-- ====================================
-         VISTA DE LISTA/TREE SIMPLIFICADA
+         VISTA KANBAN
+         ==================================== -->
+    
+    <record id="promotion_kanban_view" model="ir.ui.view">
+        <field name="name">retail.promotion.kanban</field>
+        <field name="model">retail.promotion</field>
+        <field name="arch" type="xml">
+            <kanban class="o_kanban_dashboard" create="true" quick_create="false" 
+                    default_group_by="state">
+                <!-- Campos necesarios -->
+                <field name="state"/>
+                <field name="is_valid"/>
+                <field name="discount_type"/>
+                <field name="discount"/>
+                <field name="fixed_discount"/>
+                <field name="currency_id"/>
+                <field name="days_remaining"/>
+                <field name="current_usage"/>
+                <field name="usage_limit"/>
+                <field name="start_date"/>
+                <field name="end_date"/>
+                <field name="active"/>
+                <field name="name"/>
+                <field name="code"/>
+                
+                <!-- Templates -->
+                <templates>
+                    <t t-name="kanban-box">
+                        <div t-attf-class="oe_kanban_card oe_kanban_global_click promotion-card #{record.state.raw_value}">
+                            <!-- Header -->
+                            <div class="o_kanban_card_header">
+                                <div class="o_kanban_card_header_title">
+                                    <div class="o_field_char o_text_overflow" t-esc="record.name.value"/>
+                                    <div class="o_field_char text-muted small" t-esc="record.code.value"/>
+                                </div>
+                                
+                                <!-- Badge de estado -->
+                                <div class="o_kanban_card_header_right">
+                                    <span t-attf-class="badge badge-pill promotion-badge #{record.state.raw_value}">
+                                        <t t-if="record.state.raw_value == 'active'">
+                                            <i class="fa fa-check-circle"/> Active
+                                        </t>
+                                        <t t-elif="record.state.raw_value == 'expired'">
+                                            <i class="fa fa-clock-o"/> Expired
+                                        </t>
+                                        <t t-elif="record.state.raw_value == 'draft'">
+                                            <i class="fa fa-pencil"/> Draft
+                                        </t>
+                                        <t t-else="">
+                                            <i class="fa fa-ban"/> Cancelled
+                                        </t>
+                                    </span>
+                                </div>
+                            </div>
+                            
+                            <!-- Contenido -->
+                            <div class="o_kanban_card_content">
+                                <!-- Descuento principal -->
+                                <div class="row mb-2">
+                                    <div class="col-12 text-center">
+                                        <div t-attf-class="discount-display #{record.discount_type.raw_value}">
+                                            <t t-if="record.discount_type.raw_value == 'percentage'">
+                                                <span t-esc="record.discount.value"/>%
+                                            </t>
+                                            <t t-else="">
+                                                $<span t-esc="record.fixed_discount.value"/>
+                                            </t>
+                                        </div>
+                                        <small class="text-muted">
+                                            <t t-if="record.discount_type.raw_value == 'percentage'">
+                                                Percentage Discount
+                                            </t>
+                                            <t t-else="">
+                                                Fixed Discount
+                                            </t>
+                                        </small>
+                                    </div>
+                                </div>
+                                
+                                <!-- Fechas -->
+                                <div class="row mb-2">
+                                    <div class="col-6">
+                                        <small class="text-muted">From:</small><br/>
+                                        <span t-esc="record.start_date.value"/>
+                                    </div>
+                                    <div class="col-6">
+                                        <small class="text-muted">To:</small><br/>
+                                        <span t-esc="record.end_date.value"/>
+                                    </div>
+                                </div>
+                                
+                                <!-- Estadísticas de uso -->
+                                <div class="promotion-stats" t-if="record.usage_limit.raw_value > 0">
+                                    <div class="stat-item">
+                                        <div class="stat-value" t-esc="record.current_usage.value"/>
+                                        <div class="stat-label">Used</div>
+                                    </div>
+                                    <div class="stat-item">
+                                        <div class="stat-value" t-esc="record.usage_limit.value"/>
+                                        <div class="stat-label">Limit</div>
+                                    </div>
+                                </div>
+                                
+                                <!-- Días restantes -->
+                                <div class="row mb-2" t-if="record.is_valid.raw_value">
+                                    <div class="col-12">
+                                        <t t-if="record.days_remaining.raw_value &lt;= 3">
+                                            <div class="alert alert-danger py-1 px-2 mb-0">
+                                                <small>
+                                                    <i class="fa fa-exclamation-triangle"/> 
+                                                    <strong t-esc="record.days_remaining.value"/> days left!
+                                                </small>
+                                            </div>
+                                        </t>
+                                        <t t-elif="record.days_remaining.raw_value &lt;= 7">
+                                            <div class="alert alert-warning py-1 px-2 mb-0">
+                                                <small>
+                                                    <i class="fa fa-clock-o"/> 
+                                                    <span t-esc="record.days_remaining.value"/> days remaining
+                                                </small>
+                                            </div>
+                                        </t>
+                                        <t t-else="">
+                                            <div class="alert alert-success py-1 px-2 mb-0">
+                                                <small>
+                                                    <i class="fa fa-check"/> 
+                                                    <span t-esc="record.days_remaining.value"/> days remaining
+                                                </small>
+                                            </div>
+                                        </t>
+                                    </div>
+                                </div>
+                            </div>
+                            
+                            <!-- Footer con botones -->
+                            <div class="o_kanban_card_manage_pane">
+                                <div class="o_kanban_card_manage_section o_kanban_manage_reports">
+                                    <div role="menuitem">
+                                        <a name="action_activate" type="object" 
+                                           t-if="!record.active.raw_value"
+                                           class="btn btn-sm btn-success">
+                                            <i class="fa fa-play"/> Activate
+                                        </a>
+                                        <a name="action_deactivate" type="object" 
+                                           t-if="record.active.raw_value"
+                                           class="btn btn-sm btn-warning">
+                                            <i class="fa fa-pause"/> Deactivate
+                                        </a>
+                                        <a name="action_duplicate" type="object" 
+                                           class="btn btn-sm btn-primary">
+                                            <i class="fa fa-copy"/> Duplicate
+                                        </a>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </t>
+                </templates>
+            </kanban>
+        </field>
+    </record>
+
+    <!-- ====================================
+         VISTA DE LISTA/TREE
          ==================================== -->
     
     <record id="promotion_tree_view" model="ir.ui.view">

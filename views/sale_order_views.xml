@@ -9,17 +9,127 @@
         <field name="model">sale.order</field>
         <field name="inherit_id" ref="sale.view_order_form"/>
         <field name="arch" type="xml">
-            <!-- Campo de promociones aplicadas -->
+            <!-- Campos de promociones aplicadas después del partner -->
             <field name="partner_shipping_id" position="after">
-                <field name="applied_promotions" widget="many2many_tags" readonly="1"/>
-                <field name="total_promotion_discounts" readonly="1"/>
+                <field name="applied_promotions" widget="many2many_tags" readonly="1" 
+                       options="{'color_field': 'state', 'no_create': True}"/>
+                <field name="total_promotion_discounts" readonly="1" 
+                       invisible="not total_promotion_discounts"/>
             </field>
             
-            <!-- Extensión de líneas de orden -->
+            <!-- Botón para aplicar promociones automáticamente -->
+            <button name="action_confirm" position="before">
+                <button name="apply_automatic_promotions" 
+                        string="Apply Promotions" 
+                        type="object" 
+                        class="btn-secondary"
+                        invisible="state != 'draft'"
+                        help="Apply available promotions to order lines"/>
+                <button name="remove_promotions" 
+                        string="Remove Promotions" 
+                        type="object" 
+                        class="btn-secondary"
+                        invisible="state != 'draft' or not applied_promotions"
+                        confirm="Are you sure you want to remove all applied promotions?"
+                        help="Remove all applied promotions from order"/>
+            </button>
+            
+            <!-- Extensión de líneas de orden con información de promociones -->
             <xpath expr="//field[@name='order_line']/tree/field[@name='price_subtotal']" position="after">
                 <field name="applied_promotion_id" optional="hide"/>
-                <field name="promotion_discount_amount" sum="Total Discounts" optional="hide"/>
+                <field name="promotion_discount_amount" sum="Total Discounts" optional="hide" 
+                       decoration-success="promotion_discount_amount > 0"/>
+                <field name="original_price" optional="hide" invisible="not applied_promotion_id"/>
             </xpath>
+            
+            <!-- Decoración para líneas con promoción -->
+            <xpath expr="//field[@name='order_line']/tree" position="attributes">
+                <attribute name="decoration-success">applied_promotion_id</attribute>
+            </xpath>
+        </field>
+    </record>
+    
+    <!-- ====================================
+         VISTA DE LISTA DE ÓRDENES CON PROMOCIONES
+         ==================================== -->
+    
+    <record id="sale_order_tree_promotions" model="ir.ui.view">
+        <field name="name">sale.order.tree.promotions</field>
+        <field name="model">sale.order</field>
+        <field name="inherit_id" ref="sale.view_order_tree"/>
+        <field name="arch" type="xml">
+            <!-- Primero agregar el campo applied_promotions oculto para las decoraciones -->
+            <field name="amount_total" position="before">
+                <field name="applied_promotions" invisible="1"/>
+            </field>
+            
+            <!-- Agregar columna de descuentos por promoción -->
+            <field name="amount_total" position="after">
+                <field name="total_promotion_discounts" sum="Total Promotion Discounts" 
+                       optional="hide" decoration-success="total_promotion_discounts > 0"/>
+            </field>
+            
+            <!-- Decoración para órdenes con promociones -->
+            <tree position="attributes">
+                <attribute name="decoration-info">applied_promotions</attribute>
+            </tree>
+        </field>
+    </record>
+    
+    <!-- ====================================
+         FILTROS DE BÚSQUEDA PARA ÓRDENES CON PROMOCIONES
+         ==================================== -->
+    
+    <record id="sale_order_search_promotions" model="ir.ui.view">
+        <field name="name">sale.order.search.promotions</field>
+        <field name="model">sale.order</field>
+        <field name="inherit_id" ref="sale.view_sales_order_filter"/>
+        <field name="arch" type="xml">
+            <!-- Agregar filtros específicos para promociones -->
+            <filter name="my_sale_orders_filter" position="after">
+                <separator/>
+                <filter name="with_promotions" string="With Promotions" 
+                        domain="[('applied_promotions', '!=', False)]"/>
+                <filter name="without_promotions" string="Without Promotions" 
+                        domain="[('applied_promotions', '=', False)]"/>
+                <filter name="high_discount" string="High Discount (&gt; $50)" 
+                        domain="[('total_promotion_discounts', '&gt;', 50)]"/>
+            </filter>
+            
+            <!-- Agregar campo de búsqueda por promoción -->
+            <field name="partner_id" position="after">
+                <field name="applied_promotions" string="Applied Promotions"/>
+            </field>
+            
+            <!-- Agregar agrupación por promociones -->
+            <filter name="salesperson" position="after">
+                <filter name="group_by_promotions" string="Promotions" 
+                        context="{'group_by': 'applied_promotions'}"/>
+            </filter>
+        </field>
+    </record>
+    
+    <!-- ====================================
+         ACCIÓN PARA ÓRDENES CON PROMOCIONES
+         ==================================== -->
+    
+    <record id="action_orders_with_promotions" model="ir.actions.act_window">
+        <field name="name">Orders with Promotions</field>
+        <field name="res_model">sale.order</field>
+        <field name="view_mode">tree,form,kanban,calendar,pivot,graph</field>
+        <field name="domain">[('applied_promotions', '!=', False)]</field>
+        <field name="context">{
+            'search_default_with_promotions': 1,
+            'search_default_group_by_promotions': 1
+        }</field>
+        <field name="help" type="html">
+            <p class="o_view_nocontent_smiling_face">
+                No sales orders with promotions found!
+            </p>
+            <p>
+                Sales orders with applied promotions will appear here.
+                Create some promotions and start selling to see the impact!
+            </p>
         </field>
     </record>
 </odoo>

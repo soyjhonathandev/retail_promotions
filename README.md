@@ -1,3 +1,76 @@
+ Retail Promotions - Módulo de Promociones para Odoo
+Sistema completo de gestión de descuentos promocionales diseñado específicamente para retail, que permite crear, gestionar y aplicar promociones automáticamente en órdenes de venta.
+Características Principales: 
+
+🎯 Aplicación Automática: Las promociones se aplican automáticamente al agregar productos a órdenes de venta
+📊 Vista Kanban Visual: Gestión intuitiva con tarjetas que muestran estado, descuento y días restantes
+⏰ Validación de Vigencia: Control automático de fechas de inicio y fin de promociones
+💰 Tipos de Descuento: Soporte para descuentos porcentuales y montos fijos
+🔄 Estados Inteligentes: Draft, Active, Expired, Cancelled con cálculo automático
+🛡️ Control de Límites: Límites de uso total y por cliente
+📈 Reportes Integrados: Estadísticas de uso y análisis de promociones
+🔐 Seguridad por Roles: Permisos diferenciados para usuarios, supervisores y gerentes
+
+Funcionalidades Implementadas
+Vista Kanban Interactiva
+
+Tarjetas visuales con estados de color
+Información de descuento prominente
+Alertas visuales para promociones próximas a vencer
+Botones de acción directa (Activar/Desactivar/Duplicar)
+Agrupación automática por estado
+
+
+### Aplicación Automática en Ventas
+
+Detección automática al agregar productos
+Selección de la mejor promoción disponible
+Validación de montos mínimos y vigencia
+Actualización automática de precios
+Integración completa con el flujo de ventas
+
+### Gestión Avanzada
+
+Asociación flexible con productos y categorías
+Duplicación inteligente de promociones
+Control de uso con estadísticas en tiempo real
+Validaciones automáticas de datos
+Seguimiento de cambios con chatter
+
+🚀 Instalación
+📡 Para Odoo.sh (Cloud)
+
+Fork del Repositorio: Crea un fork de este repositorio en tu cuenta de GitHub
+Nuevo Deploy: Lanza un nuevo deploy de Odoo 17 usando tu repositorio fork
+Activación Automática: El módulo será reconocido automáticamente
+Buscar en Apps: Ve a Apps y busca "Retail" para encontrar el módulo
+Instalar: Haz clic en "Instalar" para activar el módulo
+
+🖥️ Para Instalación On-Premise
+Opción 1: Instalación Manual
+bash# Clonar el repositorio en la carpeta de módulos
+cd /path/to/odoo/extra-addons
+git clone https://github.com/tu-usuario/retail-promotions.git
+
+# Reiniciar el servidor Odoo
+sudo systemctl restart odoo
+# o
+./odoo-bin -u retail_promotions -d tu_base_de_datos
+Opción 2: Con Docker
+bash# Si usas Docker Compose, agregar al volume de addons
+volumes:
+  - ./retail-promotions:/mnt/extra-addons/retail_promotions
+
+# Reiniciar contenedor
+docker-compose restart odoo
+🐳 Entorno Dockerizado Automatizado
+Si tienes problemas con la instalación on-premise, puedes usar mi entorno dockerizado preconfigurado:
+📧 Contacto para Deploy: Ponte en contacto conmigo para hacer un despliegue en mi entorno Docker automatizado que ya está configurado para reconocer módulos nuevos automáticamente.
+
+Vista previa
+![Vista Previa De Modulo](static/description/screenshot/module.jpeg)
+
+
 # Preguntas y Respuestas de Prueba Técnica - Odoo Development
 
 ## ¿Cuáles son los componentes principales de un módulo en Odoo?

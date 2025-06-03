@@ -1,29 +1,44 @@
 # -*- coding: utf-8 -*-
 {
     'name': 'Retail Promotions',
-    'version': '17.0.1.0.0',
-    'summary': 'Sistema de gestión de descuentos promocionales para retail',
+    'version': '17.0.1.1.0',
+    'summary': 'Sistema completo de gestión de descuentos promocionales para retail',
     'description': """
         Sistema de Promociones para Retail
         ==================================
         
         Características principales:
-        * Gestión completa de promociones con vigencia
+        * Gestión completa de promociones con vigencia automática
         * Descuentos automáticos en órdenes de venta
-        * Asociación flexible de productos a promociones
+        * Asociación flexible de productos y categorías a promociones
         * Validación automática de fechas de vigencia
-        * Reportes de promociones activas
+        * Vista Kanban visual para gestión de promociones
+        * Reportes de promociones activas y estadísticas
         * Integración completa con módulo de ventas
+        * Aplicación automática de mejores promociones
         
-        Funcionalidades:
-        * Creación y gestión de promociones
-        * Aplicación automática de descuentos
-        * Control de vigencia de promociones
+        Funcionalidades avanzadas:
+        * Creación y gestión visual de promociones
+        * Aplicación automática de descuentos en ventas
+        * Control inteligente de vigencia de promociones
+        * Vista Kanban con estados visuales
         * Reportes y análisis de promociones
         * Seguridad por roles de usuario
+        * Validación de límites de uso
+        * Duplicación de promociones
+        * Activación/desactivación rápida
+        
+        Mejoras en v1.1.0:
+        * Vista Kanban interactiva con estados visuales
+        * Aplicación automática mejorada de promociones
+        * Mejor cálculo de descuentos en líneas de venta
+        * Validación de vigencia en tiempo real
+        * Duplicación corregida de promociones
+        * Botones de activación/desactivación funcionales
     """,
     
     'author': 'Jhonathan Saldarriaga',
+    'website': 'https://github.com/jsaldarriaga',
     'category': 'Sales/Sales',
     'license': 'LGPL-3',
     
@@ -67,4 +82,14 @@
     'installable': True,
     'application': False,
     'auto_install': False,
+    
+    # Información adicional
+    'images': ['static/description/icon.png'],
+    'maintainers': ['jsaldarriaga'],
+    'contributors': ['Jhonathan Saldarriaga'],
+    
+    # Configuración de actualización
+    'pre_init_hook': False,
+    'post_init_hook': '_post_init_hook',
+    'uninstall_hook': False,
 }
