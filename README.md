@@ -1,4 +1,4 @@
-# Retail Promotions - Módulo de Promociones para Odoo
+# Retail Promotions - Módulo de Promociones para Odoo (version 17)
 Sistema completo de gestión de descuentos promocionales diseñado específicamente para retail, que permite crear, gestionar y aplicar promociones automáticamente en órdenes de venta.
 Características Principales: 
 
